@@ -1,0 +1,6 @@
+# build_site.py writes LF; keep the working tree LF so a fresh build never
+# shows a phantom diff against a CRLF checkout.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.woff2 binary

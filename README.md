@@ -2,7 +2,7 @@
 
 Lecture readings for IA 310, Lafayette College.
 
-**Read them here: [https://caleb-gallemore.github.io/world-cities/](https://lafcolia.github.io/ia_310_world_cities_slides/**
+**Read them here: https://lafcolia.github.io/ia_310_world_cities_slides/**
 
 This repository holds only the student-facing reading render. It is
 generated from the course slides by `scripts/build_site.py` and should

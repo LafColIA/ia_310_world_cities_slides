@@ -1,0 +1,484 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Week 12 · Wednesday — student</title><link rel='stylesheet' href='assets/vendor/fonts/barlow.css'><style>
+:root{
+  --bg:#070b16; --bg-2:#101a30;
+  --ink:#dde5f4; --ink-dim:#8fa0c0; --heading:#ffffff;
+  --accent:#22d3ee; --accent-2:#f472b6;
+  --rule:rgba(34,211,238,.28);
+
+  /* D40, re-measured 2026-08-05 at Caleb's request ("drop the article
+     background opacity a bit more"). Was .91/.93; now .78/.80, which
+     roughly doubles the plate showing through (9% -> 22%).
+
+     THE SHADOW RULE IS UNCHANGED AND STILL HOLDS. This was measured
+     before it was chosen, against the two lightest, busiest plates in
+     the manifest — week07/monday (the Periplus world map, parchment and
+     high-contrast line work) and week07/wednesday (the 1882 London sewer
+     engraving) — composited through both overlays at 1280x720, 375x812
+     and full-bleed presentation mode:
+
+       panel alpha   --ink contrast   --ink-dim   worst 48px backdrop
+                                                  luminance range
+       .91           14.8:1           7.1:1       0.0018
+       .84           14.5:1           6.9:1       0.0031
+       .78           13.9:1           6.7:1       0.0057   <- chosen
+       .72           13.6:1           6.5:1       0.0072
+       .66           13.2:1           6.3:1       0.0090
+
+     AA is nowhere near the binding constraint -- the two overlays crush
+     the plate long before the panel does, and body ink stays above 13:1
+     down to .40. What actually degrades is TEXTURE: at .72 the Periplus
+     graticule is visible behind body prose and at .66 its place-names
+     are legible through the panel. .78 is the last value where the
+     photograph reads as ground rather than as competing content, so no
+     text-shadow is needed and none is added. Do not go lower without
+     re-running the same comparison on week07/monday. */
+  --panel:rgba(9,14,28,.78);
+  --panel-2:rgba(16,26,48,.80);
+
+  --measure:34rem;
+  --pad:clamp(1rem,3vw,2.2rem);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+/* The root carries the size and body inherits it in rem. Do NOT put an
+   absolute px size on body: it silently defeats the presentation-mode
+   clamp below, which is how the prototype first put 93-character bullet
+   lines on a projector. */
+html{font-size:17px; -webkit-text-size-adjust:100%; scroll-behavior:smooth;
+     background:var(--bg)}
+body{
+  margin:0; color:var(--ink); background:var(--bg);
+  font:400 1rem/1.62 'Barlow',-apple-system,BlinkMacSystemFont,'Segoe UI',
+       Roboto,Helvetica,Arial,sans-serif;
+  padding-bottom:4rem;
+}
+
+/* --- D40: the plate, fixed, with TWO overlays -------------------------
+   A single flat overlay at the opacity text needs turns the photograph
+   to mud; scrim.css found that and it is the load-bearing part. Fixed
+   rather than per-article so it does not jump on scroll or on a slide
+   advance — one continuous ground per deck, not thirty backgrounds.
+   Decks with no photograph get signal's own cyan/magenta field here. */
+body::before,body::after{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+body::before{
+  background-image:var(--plate,none);
+  background-size:cover; background-position:center;
+  filter:saturate(.7) contrast(1.03);
+}
+body::after{
+  background:
+    linear-gradient(180deg, rgba(7,11,22,.72) 0%, rgba(7,11,22,.88) 45%,
+                    rgba(7,11,22,.94) 100%),
+    radial-gradient(125% 85% at 50% 45%, transparent 0%, rgba(7,11,22,.6) 100%);
+}
+body>*{position:relative; z-index:1}
+
+/* --- chrome ---------------------------------------------------------- */
+header{
+  position:sticky; top:0; z-index:6;
+  background:rgba(7,11,22,.86); backdrop-filter:blur(9px);
+  border-bottom:1px solid var(--rule);
+  padding:.55rem var(--pad);
+  display:flex; gap:.8rem; align-items:baseline; flex-wrap:wrap;
+}
+header h1{font-size:1rem; font-weight:700; margin:0; letter-spacing:.01em;
+  text-transform:uppercase}
+header h1 em{font-style:normal; color:var(--accent)}
+header .meta{color:var(--ink-dim); font-size:.8rem}
+header a{color:var(--accent); font-size:.8rem; text-decoration:none}
+header .right{margin-left:auto; display:flex; gap:.9rem; align-items:baseline}
+/* The notes toggle stays a pure-CSS checkbox, so it works with JS off. */
+.toggle{color:var(--ink-dim); font-size:.8rem; cursor:pointer;
+  user-select:none; display:flex; align-items:center; gap:.35rem}
+.toggle:hover{color:var(--accent)}
+#nt{position:absolute; opacity:0; pointer-events:none}
+#nt:not(:checked) ~ main .notes{display:none}
+
+/* --- D36: table of contents ------------------------------------------
+   <details> so it costs no JavaScript. Divider slides are the top-level
+   sections; everything else nests under the one above it. Nothing else
+   was asked for — no progress bar, no jump controls, no deep links. */
+.toc{max-width:var(--measure); margin:1.4rem auto 0; padding:0 var(--pad)}
+.toc summary{cursor:pointer; color:var(--accent); font:600 .72rem/1 'Barlow',
+  sans-serif; letter-spacing:.14em; text-transform:uppercase;
+  padding:.6rem 0; list-style:none}
+.toc summary::-webkit-details-marker{display:none}
+.toc summary::before{content:'▸ '}
+.toc[open] summary::before{content:'▾ '}
+.toc ol{list-style:none; margin:.2rem 0 0; padding:0;
+  border-left:2px solid var(--rule)}
+.toc ol ol{border-left:none; margin:0}
+.toc li{margin:0}
+.toc a{display:block; padding:.3rem .8rem; color:var(--ink);
+  text-decoration:none; font-size:.92rem;
+  border-left:2px solid transparent; margin-left:-2px}
+.toc a:hover{color:var(--accent); border-left-color:var(--accent)}
+.toc .sec > a{color:var(--heading); font-weight:600; margin-top:.5rem}
+.toc ol ol a{padding-left:1.6rem; font-size:.88rem; color:var(--ink-dim)}
+.toc ol ol a:hover{color:var(--accent)}
+
+main{max-width:var(--measure); margin:0 auto; padding:0 var(--pad)}
+
+/* --- the article panel ------------------------------------------------ */
+article{
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:1.4rem 1.5rem;
+  margin:1.1rem 0;
+  scroll-margin-top:4.5rem;   /* clears the sticky header on anchor jumps */
+}
+.n{font:600 .68rem/1 'Barlow',sans-serif; letter-spacing:.16em;
+   text-transform:uppercase; color:var(--accent); opacity:.75}
+
+h2{font-size:1.44rem; line-height:1.2; margin:.4rem 0 .7rem;
+   font-weight:700; color:var(--heading);
+   /* D41 hazard: Marshall–Arrow–Romer is a 20-character token with no
+      break opportunity and overflows a third-width column without these. */
+   overflow-wrap:break-word; hyphens:auto}
+h3{font-size:1.06rem; margin:1rem 0 .4rem; font-weight:600;
+   color:var(--accent-2)}
+article ul{margin:.4rem 0 .8rem; padding-left:1.1rem}
+article li{margin:.34rem 0}
+article li::marker{color:var(--accent)}
+p{margin:.6rem 0}
+blockquote{margin:.9rem 0; padding:.2rem 0 .2rem 1rem;
+  border-left:3px solid var(--accent-2); font-style:italic; font-size:1.06rem}
+blockquote p{margin:0}
+blockquote p+p{margin-top:.55rem}
+blockquote .attrib{font-style:normal; font-size:.82em; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--accent)}
+.aside{color:var(--ink-dim); font-size:.84rem; margin:.4rem 0}
+.aside .term{font-style:italic; color:var(--ink)}
+a{color:var(--accent)}
+/* Found at 375px in the INSTRUCTOR build only, which is the argument for
+   checking both: week05/wednesday's notes name a 60-character library
+   path in `code`, one unbreakable token, and it pushed 232px of
+   horizontal scroll onto the whole document. */
+article,.notes{overflow-wrap:break-word}
+code{word-break:break-all; font-size:.92em}
+
+/* D34: no plate behind figures. They were drawn for exactly this ground —
+   transparent, near-white ink. The old #65001c block is deleted. */
+img{max-width:100%; height:auto; display:block; margin:.9rem auto;
+    border-radius:6px}
+
+/* =====================================================================
+   layout-takeaway — the closing slide (F13). One iconic image from the
+   lecture alongside the take-aways, more emphatic than a bullet slide.
+
+   Three things carry the emphasis, and none of them is a per-slide
+   override: the image is a CROPPED PLATE (aspect-ratio + object-fit,
+   not a contained figure, so it fills its column whatever shape the
+   source is), the heading gets signal's cyan-magenta rule, and the
+   take-aways are numbered and ruled instead of bulleted.
+
+   Stacked here; the two-column form is in the >=700px block below,
+   alongside the D41 grid it is a sibling of. The image's aspect ratio
+   changes with it — 16/9 stacked, 4/5 in a column — because a portrait
+   crop in a full-width phone panel eats the screen.
+   ===================================================================== */
+article.takeaway{background:var(--panel-2); border-color:var(--rule)}
+article.takeaway .tk-plate{margin:0}
+article.takeaway .tk-body{margin-top:.9rem}   /* reset in the grid below */
+article.takeaway h2{font-size:1.6rem; margin:.35rem 0 .2rem}
+article.takeaway h2::after{
+  content:''; display:block; width:4.5rem; height:3px; margin:.6rem 0 .9rem;
+  border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+/* Two classes on purpose. `html.present img{max-height:56vh;
+   object-fit:contain}` scores (0,1,2); a one-class selector loses to it
+   and the plate comes back letterboxed inside its own frame. */
+article.takeaway .tk-plate img{
+  width:100%; aspect-ratio:16/9; object-fit:cover; object-position:center;
+  max-height:none; margin:.2rem 0 .5rem; border-radius:10px;
+  box-shadow:0 0 0 1px rgba(34,211,238,.18),0 18px 50px -22px rgba(0,0,0,.95)}
+/* `class="layout-takeaway fig"` — the no-photograph case (F13: "figure
+   or map is an acceptable iconic image"). week15/monday and
+   week04/monday are generated figures end to end. A chart cannot be
+   CROPPED to a portrait column without destroying it, so the fig
+   variant contains rather than covers, keeps the figure's own shape,
+   and drops the photographic frame — a transparent near-white-ink chart
+   was drawn to sit on the ground, not in a box. */
+article.takeaway.fig .tk-plate img{
+  aspect-ratio:auto; object-fit:contain; border-radius:0; box-shadow:none}
+article.takeaway ul{list-style:none; counter-reset:tk; padding-left:0; margin:0}
+article.takeaway li{
+  counter-increment:tk; position:relative;
+  margin:0; padding:.8rem 0 .8rem 2.5rem;
+  border-top:1px solid rgba(255,255,255,.10);
+  font-size:1.06rem; line-height:1.42}
+article.takeaway li:first-child{border-top:none}
+article.takeaway li::before{
+  content:counter(tk,decimal-leading-zero);
+  position:absolute; left:0; top:.95rem;
+  font:700 .8rem/1 'Barlow',sans-serif; letter-spacing:.1em;
+  color:var(--accent)}
+/* A sub-list is NOT another take-away. week03/wednesday's closing slide
+   nests one, and before the nesting fix reached this exporter it came
+   through flat and would have been numbered 04 as though it were a
+   fourth claim. Sub-items get no counter, no rule and no number — they
+   are the evidence under the claim above them. */
+article.takeaway li ul{margin:.45rem 0 0; padding-left:1.1rem;
+  list-style:disc; counter-reset:none}
+article.takeaway li li{
+  counter-increment:none; padding:.15rem 0; border-top:none;
+  font-size:.94rem; color:var(--ink-dim)}
+article.takeaway li li::before{content:none}
+article.takeaway li li::marker{color:var(--accent)}
+
+article.takeaway .tk-plate .aside{margin:.35rem 0 0}
+
+/* section dividers */
+article.divider{background:var(--panel-2); text-align:center;
+  padding:2.4rem 1.5rem; border-color:var(--rule)}
+article.divider h2{font-size:1.8rem; color:var(--accent)}
+
+/* speaker notes — instructor build only */
+.notes{background:rgba(255,255,255,.045);
+  border-left:3px solid var(--accent-2);
+  border-radius:0 8px 8px 0; padding:.85rem 1rem; margin-top:1.1rem;
+  font-size:.94rem}
+.notes::before{content:'Speaker notes'; display:block;
+  font:600 .66rem/1 'Barlow',sans-serif; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent-2); margin-bottom:.5rem}
+.notes p:first-of-type{margin-top:0}
+.notes p:last-child{margin-bottom:0}
+.notes .mustcover{color:var(--accent); font-weight:600}
+
+/* the deck index */
+.idx a{display:block; padding:.75rem 1rem; margin:.4rem 0;
+  background:var(--panel); border:1px solid rgba(255,255,255,.06);
+  border-radius:10px; color:var(--ink); text-decoration:none}
+.idx a:hover{border-color:var(--accent); color:var(--heading)}
+.idx a span{color:var(--ink-dim); font-size:.85rem; float:right}
+
+/* --- narrow screens ---------------------------------------------------
+   Two costs of the panel design on a phone, both measured, both fixed
+   here. (1) The header wrapped to 83px — 10% of the screen, and sticky,
+   so it was a permanent tax; dropping the meta line halves it. (2)
+   Nesting a notes card inside an article panel inside a padded main left
+   256px for text: a 32-character measure, worse than the flat exporter's
+   41. Panels earn their padding on a laptop and cannot afford it here. */
+@media (max-width:560px){
+  /* One line, always. Dropping the meta was not enough on its own: the
+     link group wrapped to a second row and the header still measured
+     77px. `nowrap` plus an ellipsised title holds it at ~35px. */
+  header{padding:.5rem .8rem; flex-wrap:nowrap; align-items:center}
+  header h1{font-size:.86rem; min-width:0; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis}
+  header .meta{display:none}
+  header .right{flex:none}
+  /* Full-bleed panels. The nesting tax is real — padded main + panel +
+     notes card left a 32-character measure — and the panel's inset
+     margins are the first thing that has to go at this width. */
+  main{padding:0}
+  article{padding:1rem .8rem; margin:.55rem 0; border-radius:0;
+    border-left:none; border-right:none}
+  article ul{padding-left:1rem}
+  .notes{padding:.7rem 0 .7rem .7rem; border-radius:0}
+  .toc{padding:0 .8rem}
+  .idx a{padding:.7rem .8rem}
+}
+
+/* =====================================================================
+   D41 — the 1/3 title, 2/3 content grid. Heading vertically centred
+   against the list. Stacked below 700px, so the phone read is untouched.
+   ===================================================================== */
+@media (min-width:700px){
+  :root{--measure:52rem}
+  article.grid{
+    display:grid;
+    grid-template-columns:1fr 2fr;
+    gap:1.8rem;
+    align-items:center;          /* Caleb's call: vertically centred */
+  }
+  article.grid > .col-title{min-width:0}
+  article.grid > .col-body{min-width:0}
+  article.grid > .notes{grid-column:1 / -1}
+  article.grid h2{margin-top:0}
+  article.grid .n{display:block; margin-bottom:.5rem}
+
+  /* layout-takeaway is the D41 grid's louder sibling: image left, the
+     numbered take-aways right, at 1fr / 1.32fr rather than 1fr / 2fr so
+     the photograph is a full partner rather than an illustration. Two
+     columns, two children, exactly like .col-title/.col-body above.
+
+     The image goes PORTRAIT here (4/5) and takes its height from its
+     own aspect ratio rather than from the length of the list, which is
+     what will keep 23 closing slides looking like the same slide. */
+  article.takeaway{
+    display:grid;
+    grid-template-columns:1fr 1.32fr;
+    column-gap:1.7rem;
+    align-items:center;
+  }
+  article.takeaway .tk-plate img{
+    aspect-ratio:4/5; max-height:min(62vh,27rem); margin:0}
+  article.takeaway.fig .tk-plate img{aspect-ratio:auto}
+  article.takeaway .tk-body{min-width:0; margin-top:0}
+  article.takeaway .n{display:block; margin-bottom:.45rem}
+  article.takeaway h2{margin-top:0}
+  article.takeaway > .notes{grid-column:1 / -1}
+}
+
+/* =====================================================================
+   D35 — presentation mode. ?present in the URL, or press P.
+   One article per screen, scroll-snap, projection type scale. With
+   JavaScript off none of this applies and the document simply scrolls
+   and reads, which is the intended degradation.
+   ===================================================================== */
+html.present{scroll-snap-type:y mandatory; overflow-y:scroll}
+html.present body{padding-bottom:0}
+html.present header,html.present .toc{display:none}
+html.present main{max-width:none; padding:0}
+html.present article{
+  min-height:100vh; margin:0; border:none; border-radius:0;
+  scroll-snap-align:start; scroll-margin-top:0;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:5vh 7vw;
+  overflow-y:auto;            /* a long slide scrolls rather than clips */
+  /* ...but never sideways. At 375px in presentation mode the article's
+     own vertical scrollbar leaves 8px of empty box wider than the
+     client width; no child actually overflows, so clipping it costs
+     nothing and saves a phantom horizontal scrollbar. */
+  overflow-x:clip;
+  background:var(--panel);
+}
+html.present article.grid{
+  display:grid; align-content:center; gap:4vw;
+  grid-template-columns:1fr 2fr;
+}
+/* Projection type: vw-based so it fills whatever the projector gives.
+   At 1280 this lands near 27px body and 45-55 character bullet lines,
+   which is the band that reads from the back of a room. */
+html.present{font-size:clamp(18px,2.1vw,34px)}
+html.present h2{font-size:clamp(1.5rem,2.9vw,2.6rem); line-height:1.15}
+html.present .col-body{max-width:48ch}
+html.present li{margin:.55em 0}
+html.present .notes{display:none}      /* never project the notes */
+html.present img{max-height:56vh; object-fit:contain}
+html.present .aside{font-size:.62em}
+html.present .n{position:fixed; bottom:2vh; right:3vw; opacity:.4}
+html.present article.divider{text-align:center; align-items:center}
+/* `html.present article{display:flex}` above scores (0,1,2) and would
+   otherwise flatten the takeaway grid; restate it at (0,2,2). Only above
+   700px — below that the takeaway stacks like everything else. */
+@media (min-width:700px){
+  html.present article.takeaway{
+    display:grid; align-content:center; align-items:center;
+    column-gap:4vw; grid-template-columns:1fr 1.32fr}
+  html.present article.takeaway .tk-plate img{max-height:74vh}
+}
+html.present article.takeaway h2{font-size:clamp(1.6rem,3.1vw,2.8rem)}
+html.present article.takeaway li{font-size:1em; padding:.7em 0 .7em 2.2em}
+html.present article.takeaway li::before{top:.85em; font-size:.62em}
+:root{--plate:url('assets/img/week12/edo_castle_otemon_gate_modern.jpg')}</style></head><body><header><h1>IA 310 <em>·</em> Week 12 · Wednesday</h1><span class='meta'>28 slides · student build</span><span class='right'><a href='index.html'>all decks</a><a href='?present'>present</a></span></header><details class='toc'><summary>Contents</summary><ol><li><a href='#s1'>Week 12 · Wednesday</a></li><li><a href='#s2'>Previously on Mapping World Cities . . .</a></li><li><a href='#s3'>Today on Mapping World Cities</a></li><li><a href='#s4'>Where Edo sits</a></li><li><a href='#s5'>Edo sits where the plateau meets the delta</a></li><li class='sec'><a href='#s6'>A capital ordered into existence</a><ol><li><a href='#s7'>Ieyasu picks a branch castle</a></li><li><a href='#s9'>The castle as a levy on the country</a></li><li><a href='#s10'>From command levy to lumber market (Totman, 1987)</a></li><li><a href='#s11'>Flood works on the eastern lowlands (Suzuki, 2022)</a></li><li><a href='#s12'>A city that had to be refilled (Rozman, 1974)</a></li><li><a href='#s13'>Three metropolises, one country (Katō, 2000)</a></li></ol></li><li class='sec'><a href='#s14'>Rank, written into the ground</a><ol><li><a href='#s15'>Segregation by order, not by market</a></li><li><a href='#s16'>Unequal land shares (Ichikawa, 1994)</a></li><li><a href='#s17'>Who governed the Chōnin (Katō, 2000)</a></li><li><a href='#s18'>Ranks inside the townsmen's order (Katō, 2000)</a></li><li><a href='#s19'>A rear tenement, drawn to scale (Saygi, 2026)</a></li><li><a href='#s20'>The Meireki fire (Ichikawa, 1994)</a></li><li><a href='#s21'>Building rules by rank, 1613 to 1727 (Coaldrake, 1981)</a></li></ol></li><li class='sec'><a href='#s22'>How a million people lived</a><ol><li><a href='#s23'>Probably the largest city in the world</a></li><li><a href='#s24'>Edo's water against London's (Hanley, 1987)</a></li><li><a href='#s25'>Sanitation as behaviour (Hanley, 1987)</a></li><li><a href='#s27'>Rice, fuel, and pickled daikon (Ehara, 2010)</a></li><li><a href='#s28'>What to take away</a></li></ol></li></ol></details><main><article id='s1'><div class='n'>01</div><h2>Edo</h2>
+<h2>Week 12 · Wednesday</h2></article><article id='s2' class='grid'><div class='col-title'><div class='n'>02</div><h2>Previously on Mapping World Cities . . .</h2></div><div class='col-body'><ul><li>Cities formed for centuries before any state claimed credit</li><li>Difficult travel inside a city encourages density</li><li>Cities draw timber and food out of the surrounding country</li></ul></div></article><article id='s3' class='grid'><div class='col-title'><div class='n'>03</div><h2>Today on Mapping World Cities</h2></div><div class='col-body'><ul><li>Population followed shogunal power rather than trade</li><li>Rank was written into the ground and the roof</li><li>A million people lived better than London's without industry</li></ul></div></article><article id='s4'><div class='n'>04</div><h2>Where Edo sits</h2>
+<img loading="lazy" alt="Tokyo on the Pacific coast of Honshu, with Japan drawn whole" src="assets/img/week12/citysite_edo_tokyo.png">
+<p class='aside'><span class="caption">Basemap © OpenStreetMap contributors © CARTO.</span></p></article><article id='s5'><div class='n'>05</div><h2>Edo sits where the plateau meets the delta</h2>
+<img loading="lazy" alt="The Tokyo lowlands, with the Sumida and Arakawa rivers running to the bay" src="assets/img/week12/citysite_edo_tokyo_site.png">
+<p class='aside'><span class="caption">Modern Tokyo at the same site. Basemap: OpenStreetMap contributors, CARTO.</span></p></article><article id='s6' class='divider'><h2>A capital ordered into existence</h2></article><article id='s7' class='grid'><div class='col-title'><div class='n'>07</div><h2>Ieyasu picks a branch castle</h2></div><div class='col-body'><ul><li>Headquarters moved to Edo in 1590 (Rozman, 1974)</li><li>A site with a branch castle and an insignificant market</li><li>Merchants encouraged in behind him for two decades (Totman, 1987)</li></ul></div></article><article id='s8'><div class='n'>08</div><blockquote><p>Seventeenth-century Edo was a city built by and for the shōgun. The immense concentration of power in the shōgun imposed stability in the city, and this made it unnecessary for the authorities to interfere directly in the city's general administration and economic affairs.</p><p class="attrib">— Katō, 2000</p></blockquote></article><article id='s9'><div class='n'>09</div><h2>The castle as a levy on the country</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="A surviving gate of Edo Castle" src="assets/img/week12/edo_castle_otemon_gate_modern.jpg">
+<p class='aside'><span class="caption">Ote-mon gate, Edo Castle. Don Ramey Logan, Wikimedia Commons, CC BY-SA 3.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Capital built by mobilizing goods and labour nationally (Katō, 2000)</li><li>Outer moat 15.7 km; spiral system finished 1636 (Coaldrake, 1981)</li><li>Edo Castle in 1606 took 43,000 pieces of shingling wood (Totman, 1987)</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s10' class='grid'><div class='col-title'><div class='n'>10</div><h2>From command levy to lumber market (Totman, 1987)</h2></div><div class='col-body'><ul><li>A boom phase of lumbering from 1580 to 1660</li><li>A maintenance phase followed after 1660 everywhere except Edo</li><li>About 125 wholesalers in three guilds organised the trade by the 1700s</li></ul></div></article><article id='s11'><div class='n'>11</div><h2>Flood works on the eastern lowlands (Suzuki, 2022)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Hiroshige&#x27;s view of Ichikokubashi Bridge in Edo" src="assets/img/week12/hiroshige_ichikokubashi_bridge_edo.jpg">
+<p class='aside'><span class="caption">Utagawa Hiroshige, Ichikokubashi Bridge in Edo. Wikimedia Commons, public domain.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Flood works funded on the same levy logic as the castle</li><li>Daimyō funded the works in exchange for rights to fief tax revenue</li><li>Commoner firefighting brigades exceeded 10,000 members by the mid-1700s</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s12' class='grid'><div class='col-title'><div class='n'>12</div><h2>A city that had to be refilled (Rozman, 1974)</h2></div><div class='col-body'><ul><li>Net in-migration ran near 10,000 a year in the early 1600s</li><li>Rising to about 18,000 a year by the early 1700s</li><li>The sex ratio was roughly two men to one woman in the 1720s</li></ul></div></article><article id='s13'><div class='n'>13</div><h2>Three metropolises, one country (Katō, 2000)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Map of the Gokaidō, the five highways radiating from Edo, with the Tōkaidō running along the coast to Kyoto" src="assets/img/week12/gokaido_edo_five_routes_map.png">
+<p class='aside'><span class="caption">The Gokaidō, the five routes joining Edo to the provinces: the Tōkaidō is route 1, Edo to Kyoto. Artanisen, Wikimedia Commons, CC BY-SA 4.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Edo political, Osaka commercial, Kyoto cultural</li><li>First recorded Edo to Osaka cargo shipping in 1616</li><li>The Ten Groups of Wholesalers formally established by 1694</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s14' class='divider'><h2>Rank, written into the ground</h2></article><article id='s15' class='grid'><div class='col-title'><div class='n'>15</div><h2>Segregation by order, not by market</h2></div><div class='col-body'><ul><li>Samurai, clergy and chōnin lived in separate quarters (Katō, 2000)</li><li>Each order governed under a separate ruling system (Katō, 2000)</li><li>Fudai daimyō northeast of the castle, tozama southwest (Coaldrake, 1981)</li></ul>
+<p class='aside'><span class="footnote"><span class="term">Chōnin</span> (町人): the townspeople, meaning the merchants and artisans as distinct from warriors and clergy. <span class="term">Fudai daimyō</span>: a lord of a house allied to the Tokugawa from before their victory. <span class="term">Tozama</span>: an "outside" lord, of a house that submitted only after the Tokugawa victory.</span></p></div></article><article id='s16'><div class='n'>16</div><h2>Unequal land shares (Ichikawa, 1994)</h2>
+<img loading="lazy" alt="Samurai land took 60 per cent of the city for 700,000 people; chōninchi 20 per cent for 600,000" src="assets/img/week12/edo_land_population.png">
+<p class='aside'><span class="caption">Land shares rounded to 10 per cent. Chōninchi density reached about 67,000 per square kilometre.</span></p>
+<p class='aside'><span class="footnote"><span class="term">Chōninchi</span> (町人地): townsmen's land, the wards of the city set aside for the chōnin, as against the samurai and temple wards.</span></p></article><article id='s17'><div class='n'>17</div><h2>Who governed the Chōnin (Katō, 2000)</h2>
+<img loading="lazy" alt="Four tiers: two city magistrates over three machi-doshiyori families, over 250 to 260 nanushi, over the blocks themselves" src="assets/img/week12/edo_chonin_administration.png">
+<p class='aside'><span class="caption">One ladder of four tiers, over the chōnin alone; the samurai and the clergy were governed under separate systems.</span></p>
+<p class='aside'><span class="footnote"><span class="term">Chō</span>: a city block, and the unit an Edo ward headman was assigned in multiples of. <span class="term">Nanushi</span>: the headman of a chō, a townsman himself, answerable upward for the block's registers and order. <span class="term">Machi-doshiyori</span>: literally "town elder", the standing office between the headmen and the magistrates.</span></p></article><article id='s18' class='grid'><div class='col-title'><div class='n'>18</div><h2>Ranks inside the townsmen's order (Katō, 2000)</h2></div><div class='col-body'><ul><li>Householders (ie-mochi) at the top of the chōnin order</li><li>Landlords (ie-nushi) below the householders</li><li>Tenants on the frontage (omote-tanagari)</li><li>Tenants in the alleys (ura-tanagari)</li><li>Tenants excluded from administration entirely</li></ul></div></article><article id='s19'><div class='n'>19</div><h2>A rear tenement, drawn to scale (Saygi, 2026)</h2>
+<img loading="lazy" alt="Three rear tenement types of about 12 to 17 square metres, beside a Toyota Corolla&#x27;s footprint of 8.2" src="assets/img/week12/edo_tenement_area.png">
+<p class='aside'><span class="caption">Twenty-seven such units filled one block's interior at Honshirogane-chō 2-chōme, none of them with direct street access. Car dimensions from Toyota's published specification.</span></p></article><article id='s20'><div class='n'>20</div><h2>The Meireki fire (Ichikawa, 1994)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Crowds fleeing flames at a closed gate, with bodies in the moat below" src="assets/img/week12/edo_meireki_fire_musashiabumi.jpg">
+<p class='aside'><span class="caption">*Musashi Abumi*, 1661, the illustrated account of the fire. British Museum copy, via Wikimedia Commons, public domain.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>The 1657 fire burned 60% of the urban area</li><li>Nihonbashi Street widened to 18 m against a typical 3.6 to 7.2</li><li>The start of 260 years of shogunal city-building</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s21'><div class='n'>21</div><h2>Building rules by rank, 1613 to 1727 (Coaldrake, 1981)</h2>
+<img loading="lazy" alt="Building rules from 1613 to 1727, from the gateway bar to the tile subsidy" src="assets/img/week12/edo_status_timeline.png">
+<p class='aside'><span class="caption">Regulation of gateways, roofing and building form.</span></p>
+<p class='aside'><span class="footnote"><span class="term">Daimyō</span>: a great territorial lord, holding a domain under the shōgun. <span class="term">Shoin-zukuri</span>: the formal style of Japanese building organised around a reception room with a built-in writing alcove, staggered shelves and a decorative alcove.</span></p></article><article id='s22' class='divider'><h2>How a million people lived</h2></article><article id='s23'><div class='n'>23</div><h2>Probably the largest city in the world</h2>
+<img loading="lazy" alt="Edo grew from about 100,000 in 1610 to over a million by the 1720s, against London and Paris at about 500,000" src="assets/img/week12/edo_population.png">
+<p class='aside'><span class="caption">Edo's series and Naitō Akira's revised peak (Rozman, 1974); London and Paris (Ichikawa, 1994).</span></p></article><article id='s24' class='grid'><div class='col-title'><div class='n'>24</div><h2>Edo's water against London's (Hanley, 1987)</h2></div><div class='col-body'><ul><li>The Kanda system ran over 41 miles with 3,663 distribution ducts</li><li>The Tama system, begun 1652, ran over 50 miles</li><li>Continuous supply, against London's 7 hours a day, 3 days a week</li></ul>
+<img loading="lazy" alt="Edo had 168 hours of piped supply a week against London&#x27;s 21 in the 1750s" src="assets/img/week12/edo_london_water.png">
+<p class='aside'><span class="caption">Piped supply, converted to hours per week from both sources' own statements.</span></p></div></article><article id='s25'><div class='n'>25</div><h2>Sanitation as behaviour (Hanley, 1987)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Hiroshige&#x27;s Sudden Shower over Shin-Ōhashi Bridge and Atake" src="assets/img/week12/hiroshige_sudden_shower_ohashi.jpg">
+<p class='aside'><span class="caption">Utagawa Hiroshige, Sudden Shower over Shin-Ōhashi Bridge and Atake. Metropolitan Museum of Art, via Wikimedia Commons, CC0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Roughly 600 public baths operated in Edo by the early 1800s</li><li>Leicester had almost 3,000 uncovered cesspits by the mid-1800s</li><li>Manhattan had an estimated 30,000 cesspools in 1849</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s26'><div class='n'>26</div><blockquote><p>The several hundred towns and cities of early modern Japan were wooden creatures with ravenous appetites for timber from the archipelago's convoluted mountain valleys.</p><p class="attrib">— Totman, 1987</p></blockquote></article><article id='s27' class='grid'><div class='col-title'><div class='n'>27</div><h2>Rice, fuel, and pickled daikon (Ehara, 2010)</h2></div><div class='col-body'><ul><li>Adults ate 560 to 630 grams of rice a day, about 80% of energy</li><li>A carpenter's household spent 22% of income on rice and 7.6% on rent</li><li>Rent ran 900 to 1,500 mon a month centrally against 120 to 150 outside</li><li>Pickled daikon cost 16 mon, about double the price of fresh vegetables</li></ul></div></article><article id='s28' class='takeaway'><figure class='tk-plate'><img loading="lazy" alt="A surviving gate of Edo Castle" src="assets/img/week12/edo_castle_otemon_gate_modern.jpg">
+<p class='aside'><span class="caption">Ote-mon gate, Edo Castle. Don Ramey Logan, Wikimedia Commons, CC BY-SA 3.0.</span></p></figure><div class='tk-body'><div class='n'>28</div><h2>What to take away</h2><ul><li>Population followed shogunal power rather than trade (Katō, 2000)</li><li>Rank was written into the ground and the roof (Coaldrake, 1981)</li><li>A million people lived better than London's without industry (Hanley, 1987)</li></ul></div></article></main><script>
+(function(){
+  var present = new URLSearchParams(location.search).has('present');
+  if (present) document.documentElement.classList.add('present');
+
+  var arts = [].slice.call(document.querySelectorAll('article'));
+  if (!arts.length) return;
+  function current(){
+    var best = 0, bestD = Infinity;
+    for (var i = 0; i < arts.length; i++){
+      var d = Math.abs(arts[i].getBoundingClientRect().top);
+      if (d < bestD){ bestD = d; best = i; }
+    }
+    return best;
+  }
+  function go(step){
+    var i = Math.min(arts.length - 1, Math.max(0, current() + step));
+    arts[i].scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+    switch (e.key){
+      case 'PageDown': case 'ArrowRight': case 'ArrowDown': case ' ':
+        e.preventDefault(); go(1); break;
+      case 'PageUp': case 'ArrowLeft': case 'ArrowUp':
+        e.preventDefault(); go(-1); break;
+      case 'Home': e.preventDefault(); arts[0].scrollIntoView(); break;
+      case 'End': e.preventDefault(); arts[arts.length-1].scrollIntoView(); break;
+      case 'p': case 'P':
+        var u = new URL(location.href);
+        if (present) u.searchParams.delete('present');
+        else u.searchParams.set('present', '');
+        location.href = u.toString();
+        break;
+    }
+  });
+})();
+</script></body></html>

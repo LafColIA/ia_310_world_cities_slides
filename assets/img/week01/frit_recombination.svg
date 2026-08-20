@@ -1,0 +1,83 @@
+<svg width="1140" height="560" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 560" font-family="Barlow, sans-serif">
+  <!-- Algaze's leapfrog linkage: frit takes waste and by-products from two
+       unrelated industries and yields a third. Neither parent could have
+       made it alone; only co-location could.
+
+       Palette: signal (QUESTIONS.md D37). The maroon fills this file
+       carried from the pre-D37 era (#7d2438 for the three substance
+       cards, #3d0011 for the kiln behind its rule), its warm tan ink
+       (#cbc2b4) and the old pastel blue (#6fc0e8) and amber (#f2bd5c)
+       are replaced with theme_slides.R's tokens. -->
+
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9fb0cc"/>
+    </marker>
+  </defs>
+
+  <!-- parent industries -->
+  <g>
+    <rect x="30" y="60" width="290" height="120" rx="10"
+          fill="#22304d" stroke="#9fb0cc" stroke-width="1.5"/>
+    <text x="175" y="105" fill="#ffffff" font-size="33" font-weight="700"
+          text-anchor="middle">Metallurgy</text>
+    <text x="175" y="140" fill="#f4f2ef" font-size="24"
+          text-anchor="middle" font-weight="600">granular copper debris</text>
+  </g>
+
+  <g>
+    <rect x="30" y="380" width="290" height="120" rx="10"
+          fill="#22304d" stroke="#9fb0cc" stroke-width="1.5"/>
+    <text x="175" y="425" fill="#ffffff" font-size="33" font-weight="700"
+          text-anchor="middle">Textiles &amp; plaster</text>
+    <text x="175" y="460" fill="#f4f2ef" font-size="24"
+          text-anchor="middle" font-weight="600">alkali, lime powder</text>
+  </g>
+
+  <!-- neutral input -->
+  <g>
+    <rect x="30" y="230" width="290" height="100" rx="10"
+          fill="none" stroke="#9fb0cc" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="175" y="290" fill="#9fb0cc" font-size="27"
+          text-anchor="middle" font-weight="600">sand or quartz</text>
+  </g>
+
+  <!-- arrows in -->
+  <g stroke="#9fb0cc" stroke-width="2.5" fill="none" marker-end="url(#ar)">
+    <path d="M330,120 C420,120 420,250 500,268"/>
+    <path d="M330,280 L500,280"/>
+    <path d="M330,440 C420,440 420,310 500,292"/>
+  </g>
+
+  <!-- the kiln -->
+  <g>
+    <rect x="510" y="215" width="230" height="130" rx="10"
+          fill="#101a30" stroke="#22d3ee" stroke-width="2.5"/>
+    <text x="625" y="265" fill="#22d3ee" font-size="32" font-weight="700"
+          text-anchor="middle">fired at high</text>
+    <text x="625" y="298" fill="#22d3ee" font-size="32" font-weight="700"
+          text-anchor="middle">temperature</text>
+  </g>
+
+  <path d="M750,280 L830,280" stroke="#9fb0cc" stroke-width="2.5"
+        fill="none" marker-end="url(#ar)"/>
+
+  <!-- output -->
+  <g>
+    <rect x="840" y="200" width="270" height="160" rx="10"
+          fill="#22304d" stroke="#fbbf24" stroke-width="2.5"/>
+    <text x="975" y="250" fill="#ffffff" font-size="36" font-weight="700"
+          text-anchor="middle">Frit</text>
+    <text x="975" y="288" fill="#fbbf24" font-size="26"
+          text-anchor="middle" font-weight="600">artificial lapis</text>
+    <text x="975" y="322" fill="#f4f2ef" font-size="23"
+          text-anchor="middle" font-weight="600">imports of exotic stone</text>
+    <text x="975" y="345" fill="#f4f2ef" font-size="23"
+          text-anchor="middle" font-weight="600">no longer needed</text>
+  </g>
+
+  <text x="570" y="530" fill="#9fb0cc" font-size="24" text-anchor="middle" font-weight="600">
+    Neither parent industry could produce it. Only their co-location could.
+  </text>
+</svg>

@@ -1,0 +1,148 @@
+<svg width="1220" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 600" font-family="Barlow, sans-serif">
+  <!-- How land readjustment is supposed to work.
+       Owners pool irregular parcels; a share of the pooled land is taken
+       for streets and public space and a further share is sold to pay
+       for the works; each owner is replotted onto a smaller parcel that
+       is worth more because it is serviced. The financing is meant to
+       come out of the value the servicing creates, which is why Doebele
+       called it self-financing.
+
+       SOURCE (established 2026-08-05, replacing an earlier caption that
+       credited a reference found nowhere in the corpus): García Fermín
+       (2024), summarised in `1-s2.0-S0264837724002369-main_Summary.md`,
+       describes land readjustment as consolidated, planned development
+       of fragmented lands through state intervention in property
+       boundaries and redistribution, financed by selling restructured
+       parcels and by cash contributions from landowners — land value
+       capture. Hein (2010), in the Edo/Tokyo corpus, corroborates the
+       replotting step: readjustment left Tokyo with its old land
+       division and reduced the size of the building sites. The day note
+       still carries [[ADD IN MORE MATERIAL ON WHAT THE MECHANISM IS]]
+       and supplies none, so the panels stay schematic.
+
+       Palette: signal (QUESTIONS.md D37). The warm tan ink (#cbc2b4)
+       and pastel blue (#6fc0e8) of the pre-D37 era are replaced with
+       theme_slides.R's tokens, and so are FOUR maroon surfaces that a
+       find-and-replace would have collapsed into one. What each one
+       denoted, and where it went:
+
+         #4a0d20 -> #0b1020  the "after" block's substrate, the ground
+                             everything else is drawn on. Barely a tint
+                             above the slide in maroon (1.08:1 on the
+                             old #46000f) and barely one now (1.09:1 on
+                             #070b16) — it was never meant to be seen
+                             as a surface, only to sit under one.
+         #3d0011 -> #101a30  the pooled block and the sale reserve: the
+                             two collective surfaces, both drawn inside
+                             a cyan rule that does the identifying. This
+                             is the same token the kiln and the closing
+                             steps of the week15 pair take.
+         #7d2438 -> #22304d  an owner's parcel, before and after. Same
+                             fill in both panels on purpose: it is the
+                             one thing that survives the transformation.
+                             #22304d is signal's map LAND, which is what
+                             a parcel is, and it holds the #9fb0cc lot
+                             boundaries at ~6:1, as the maroon did.
+         #65001c -> #3c5480  the streets taken out of the pool. Signal's
+                             map FRAME — the structure imposed on the
+                             block. This is the one step that gains
+                             prominence over the maroon (2.5:1 on the
+                             substrate, against 1.2:1 before): at 24px
+                             wide, separated from the lots by 13px of
+                             substrate, a street that only whispers is
+                             a gap rather than a street. -->
+
+
+  <defs>
+    <marker id="lr-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9fb0cc"/>
+    </marker>
+  </defs>
+
+  <!-- ================ panel 1: before ================ -->
+  <text x="180" y="48" fill="#ffffff" font-size="34" font-weight="700"
+        text-anchor="middle">Before</text>
+
+  <g stroke="#9fb0cc" stroke-width="2.5">
+    <polygon points="60,90 200,80 215,215 70,230" fill="#22304d"/>
+    <polygon points="200,80 320,96 330,200 215,215" fill="#22304d"/>
+    <polygon points="70,230 215,215 205,340 62,355" fill="#22304d"/>
+    <polygon points="215,215 330,200 322,330 205,340" fill="#22304d"/>
+    <polygon points="62,355 205,340 200,470 66,462" fill="#22304d"/>
+    <polygon points="205,340 322,330 318,455 200,470" fill="#22304d"/>
+  </g>
+
+  <text x="180" y="516" fill="#f4f2ef" font-size="25" font-weight="600"
+        text-anchor="middle">irregular parcels</text>
+  <text x="180" y="548" fill="#f4f2ef" font-size="25" font-weight="600"
+        text-anchor="middle">no street frontage</text>
+
+  <!-- ================ arrow 1 ================ -->
+  <line x1="355" y1="270" x2="425" y2="270" stroke="#9fb0cc"
+        stroke-width="5" marker-end="url(#lr-arrow)"/>
+  <text x="390" y="240" fill="#22d3ee" font-size="24" font-weight="700"
+        text-anchor="middle">pool</text>
+
+  <!-- ================ panel 2: pooled ================ -->
+  <text x="610" y="48" fill="#ffffff" font-size="34" font-weight="700"
+        text-anchor="middle">Pooled</text>
+
+  <rect x="460" y="80" width="300" height="390" fill="#101a30"
+        stroke="#22d3ee" stroke-width="3.5"/>
+
+  <text x="610" y="230" fill="#22d3ee" font-size="30" font-weight="700"
+        text-anchor="middle">one parcel,</text>
+  <text x="610" y="268" fill="#22d3ee" font-size="30" font-weight="700"
+        text-anchor="middle">shared claims</text>
+  <text x="610" y="322" fill="#f4f2ef" font-size="24" font-weight="600"
+        text-anchor="middle">each owner holds a</text>
+  <text x="610" y="352" fill="#f4f2ef" font-size="24" font-weight="600"
+        text-anchor="middle">share, not a plot</text>
+
+  <text x="610" y="516" fill="#f4f2ef" font-size="25" font-weight="600"
+        text-anchor="middle">land taken for streets</text>
+  <text x="610" y="548" fill="#f4f2ef" font-size="25" font-weight="600"
+        text-anchor="middle">and for a sale reserve</text>
+
+  <!-- ================ arrow 2 ================ -->
+  <line x1="790" y1="270" x2="860" y2="270" stroke="#9fb0cc"
+        stroke-width="5" marker-end="url(#lr-arrow)"/>
+  <text x="825" y="240" fill="#22d3ee" font-size="24" font-weight="700"
+        text-anchor="middle">replot</text>
+
+  <!-- ================ panel 3: after ================ -->
+  <text x="1040" y="48" fill="#ffffff" font-size="34" font-weight="700"
+        text-anchor="middle">After</text>
+
+  <!-- streets -->
+  <rect x="895" y="80" width="290" height="390" fill="#0b1020"/>
+  <rect x="1030" y="80" width="24" height="390" fill="#3c5480"/>
+  <rect x="895" y="262" width="290" height="24" fill="#3c5480"/>
+
+  <!-- replotted lots -->
+  <g stroke="#9fb0cc" stroke-width="2.5" fill="#22304d">
+    <rect x="905" y="92" width="112" height="76"/>
+    <rect x="905" y="176" width="112" height="76"/>
+    <rect x="1066" y="92" width="108" height="76"/>
+    <rect x="1066" y="176" width="108" height="76"/>
+    <rect x="905" y="298" width="112" height="76"/>
+    <rect x="905" y="382" width="112" height="76"/>
+  </g>
+
+  <!-- the sale reserve -->
+  <g stroke="#22d3ee" stroke-width="3.5" fill="#101a30">
+    <rect x="1066" y="298" width="108" height="160"/>
+  </g>
+  <text x="1120" y="368" fill="#22d3ee" font-size="22" font-weight="700"
+        text-anchor="middle">sold to</text>
+  <text x="1120" y="394" fill="#22d3ee" font-size="22" font-weight="700"
+        text-anchor="middle">pay for</text>
+  <text x="1120" y="420" fill="#22d3ee" font-size="22" font-weight="700"
+        text-anchor="middle">the works</text>
+
+  <text x="1040" y="516" fill="#f4f2ef" font-size="25" font-weight="600"
+        text-anchor="middle">smaller lots, serviced,</text>
+  <text x="1040" y="548" fill="#f4f2ef" font-size="25" font-weight="600"
+        text-anchor="middle">meant to be worth more</text>
+</svg>

@@ -1,0 +1,503 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Week 9 · Monday — student</title><link rel='stylesheet' href='assets/vendor/fonts/barlow.css'><style>
+:root{
+  --bg:#070b16; --bg-2:#101a30;
+  --ink:#dde5f4; --ink-dim:#8fa0c0; --heading:#ffffff;
+  --accent:#22d3ee; --accent-2:#f472b6;
+  --rule:rgba(34,211,238,.28);
+
+  /* D40, re-measured 2026-08-05 at Caleb's request ("drop the article
+     background opacity a bit more"). Was .91/.93; now .78/.80, which
+     roughly doubles the plate showing through (9% -> 22%).
+
+     THE SHADOW RULE IS UNCHANGED AND STILL HOLDS. This was measured
+     before it was chosen, against the two lightest, busiest plates in
+     the manifest — week07/monday (the Periplus world map, parchment and
+     high-contrast line work) and week07/wednesday (the 1882 London sewer
+     engraving) — composited through both overlays at 1280x720, 375x812
+     and full-bleed presentation mode:
+
+       panel alpha   --ink contrast   --ink-dim   worst 48px backdrop
+                                                  luminance range
+       .91           14.8:1           7.1:1       0.0018
+       .84           14.5:1           6.9:1       0.0031
+       .78           13.9:1           6.7:1       0.0057   <- chosen
+       .72           13.6:1           6.5:1       0.0072
+       .66           13.2:1           6.3:1       0.0090
+
+     AA is nowhere near the binding constraint -- the two overlays crush
+     the plate long before the panel does, and body ink stays above 13:1
+     down to .40. What actually degrades is TEXTURE: at .72 the Periplus
+     graticule is visible behind body prose and at .66 its place-names
+     are legible through the panel. .78 is the last value where the
+     photograph reads as ground rather than as competing content, so no
+     text-shadow is needed and none is added. Do not go lower without
+     re-running the same comparison on week07/monday. */
+  --panel:rgba(9,14,28,.78);
+  --panel-2:rgba(16,26,48,.80);
+
+  --measure:34rem;
+  --pad:clamp(1rem,3vw,2.2rem);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+/* The root carries the size and body inherits it in rem. Do NOT put an
+   absolute px size on body: it silently defeats the presentation-mode
+   clamp below, which is how the prototype first put 93-character bullet
+   lines on a projector. */
+html{font-size:17px; -webkit-text-size-adjust:100%; scroll-behavior:smooth;
+     background:var(--bg)}
+body{
+  margin:0; color:var(--ink); background:var(--bg);
+  font:400 1rem/1.62 'Barlow',-apple-system,BlinkMacSystemFont,'Segoe UI',
+       Roboto,Helvetica,Arial,sans-serif;
+  padding-bottom:4rem;
+}
+
+/* --- D40: the plate, fixed, with TWO overlays -------------------------
+   A single flat overlay at the opacity text needs turns the photograph
+   to mud; scrim.css found that and it is the load-bearing part. Fixed
+   rather than per-article so it does not jump on scroll or on a slide
+   advance — one continuous ground per deck, not thirty backgrounds.
+   Decks with no photograph get signal's own cyan/magenta field here. */
+body::before,body::after{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+body::before{
+  background-image:var(--plate,none);
+  background-size:cover; background-position:center;
+  filter:saturate(.7) contrast(1.03);
+}
+body::after{
+  background:
+    linear-gradient(180deg, rgba(7,11,22,.72) 0%, rgba(7,11,22,.88) 45%,
+                    rgba(7,11,22,.94) 100%),
+    radial-gradient(125% 85% at 50% 45%, transparent 0%, rgba(7,11,22,.6) 100%);
+}
+body>*{position:relative; z-index:1}
+
+/* --- chrome ---------------------------------------------------------- */
+header{
+  position:sticky; top:0; z-index:6;
+  background:rgba(7,11,22,.86); backdrop-filter:blur(9px);
+  border-bottom:1px solid var(--rule);
+  padding:.55rem var(--pad);
+  display:flex; gap:.8rem; align-items:baseline; flex-wrap:wrap;
+}
+header h1{font-size:1rem; font-weight:700; margin:0; letter-spacing:.01em;
+  text-transform:uppercase}
+header h1 em{font-style:normal; color:var(--accent)}
+header .meta{color:var(--ink-dim); font-size:.8rem}
+header a{color:var(--accent); font-size:.8rem; text-decoration:none}
+header .right{margin-left:auto; display:flex; gap:.9rem; align-items:baseline}
+/* The notes toggle stays a pure-CSS checkbox, so it works with JS off. */
+.toggle{color:var(--ink-dim); font-size:.8rem; cursor:pointer;
+  user-select:none; display:flex; align-items:center; gap:.35rem}
+.toggle:hover{color:var(--accent)}
+#nt{position:absolute; opacity:0; pointer-events:none}
+#nt:not(:checked) ~ main .notes{display:none}
+
+/* --- D36: table of contents ------------------------------------------
+   <details> so it costs no JavaScript. Divider slides are the top-level
+   sections; everything else nests under the one above it. Nothing else
+   was asked for — no progress bar, no jump controls, no deep links. */
+.toc{max-width:var(--measure); margin:1.4rem auto 0; padding:0 var(--pad)}
+.toc summary{cursor:pointer; color:var(--accent); font:600 .72rem/1 'Barlow',
+  sans-serif; letter-spacing:.14em; text-transform:uppercase;
+  padding:.6rem 0; list-style:none}
+.toc summary::-webkit-details-marker{display:none}
+.toc summary::before{content:'▸ '}
+.toc[open] summary::before{content:'▾ '}
+.toc ol{list-style:none; margin:.2rem 0 0; padding:0;
+  border-left:2px solid var(--rule)}
+.toc ol ol{border-left:none; margin:0}
+.toc li{margin:0}
+.toc a{display:block; padding:.3rem .8rem; color:var(--ink);
+  text-decoration:none; font-size:.92rem;
+  border-left:2px solid transparent; margin-left:-2px}
+.toc a:hover{color:var(--accent); border-left-color:var(--accent)}
+.toc .sec > a{color:var(--heading); font-weight:600; margin-top:.5rem}
+.toc ol ol a{padding-left:1.6rem; font-size:.88rem; color:var(--ink-dim)}
+.toc ol ol a:hover{color:var(--accent)}
+
+main{max-width:var(--measure); margin:0 auto; padding:0 var(--pad)}
+
+/* --- the article panel ------------------------------------------------ */
+article{
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:1.4rem 1.5rem;
+  margin:1.1rem 0;
+  scroll-margin-top:4.5rem;   /* clears the sticky header on anchor jumps */
+}
+.n{font:600 .68rem/1 'Barlow',sans-serif; letter-spacing:.16em;
+   text-transform:uppercase; color:var(--accent); opacity:.75}
+
+h2{font-size:1.44rem; line-height:1.2; margin:.4rem 0 .7rem;
+   font-weight:700; color:var(--heading);
+   /* D41 hazard: Marshall–Arrow–Romer is a 20-character token with no
+      break opportunity and overflows a third-width column without these. */
+   overflow-wrap:break-word; hyphens:auto}
+h3{font-size:1.06rem; margin:1rem 0 .4rem; font-weight:600;
+   color:var(--accent-2)}
+article ul{margin:.4rem 0 .8rem; padding-left:1.1rem}
+article li{margin:.34rem 0}
+article li::marker{color:var(--accent)}
+p{margin:.6rem 0}
+blockquote{margin:.9rem 0; padding:.2rem 0 .2rem 1rem;
+  border-left:3px solid var(--accent-2); font-style:italic; font-size:1.06rem}
+blockquote p{margin:0}
+blockquote p+p{margin-top:.55rem}
+blockquote .attrib{font-style:normal; font-size:.82em; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--accent)}
+.aside{color:var(--ink-dim); font-size:.84rem; margin:.4rem 0}
+.aside .term{font-style:italic; color:var(--ink)}
+a{color:var(--accent)}
+/* Found at 375px in the INSTRUCTOR build only, which is the argument for
+   checking both: week05/wednesday's notes name a 60-character library
+   path in `code`, one unbreakable token, and it pushed 232px of
+   horizontal scroll onto the whole document. */
+article,.notes{overflow-wrap:break-word}
+code{word-break:break-all; font-size:.92em}
+
+/* D34: no plate behind figures. They were drawn for exactly this ground —
+   transparent, near-white ink. The old #65001c block is deleted. */
+img{max-width:100%; height:auto; display:block; margin:.9rem auto;
+    border-radius:6px}
+
+/* =====================================================================
+   layout-takeaway — the closing slide (F13). One iconic image from the
+   lecture alongside the take-aways, more emphatic than a bullet slide.
+
+   Three things carry the emphasis, and none of them is a per-slide
+   override: the image is a CROPPED PLATE (aspect-ratio + object-fit,
+   not a contained figure, so it fills its column whatever shape the
+   source is), the heading gets signal's cyan-magenta rule, and the
+   take-aways are numbered and ruled instead of bulleted.
+
+   Stacked here; the two-column form is in the >=700px block below,
+   alongside the D41 grid it is a sibling of. The image's aspect ratio
+   changes with it — 16/9 stacked, 4/5 in a column — because a portrait
+   crop in a full-width phone panel eats the screen.
+   ===================================================================== */
+article.takeaway{background:var(--panel-2); border-color:var(--rule)}
+article.takeaway .tk-plate{margin:0}
+article.takeaway .tk-body{margin-top:.9rem}   /* reset in the grid below */
+article.takeaway h2{font-size:1.6rem; margin:.35rem 0 .2rem}
+article.takeaway h2::after{
+  content:''; display:block; width:4.5rem; height:3px; margin:.6rem 0 .9rem;
+  border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+/* Two classes on purpose. `html.present img{max-height:56vh;
+   object-fit:contain}` scores (0,1,2); a one-class selector loses to it
+   and the plate comes back letterboxed inside its own frame. */
+article.takeaway .tk-plate img{
+  width:100%; aspect-ratio:16/9; object-fit:cover; object-position:center;
+  max-height:none; margin:.2rem 0 .5rem; border-radius:10px;
+  box-shadow:0 0 0 1px rgba(34,211,238,.18),0 18px 50px -22px rgba(0,0,0,.95)}
+/* `class="layout-takeaway fig"` — the no-photograph case (F13: "figure
+   or map is an acceptable iconic image"). week15/monday and
+   week04/monday are generated figures end to end. A chart cannot be
+   CROPPED to a portrait column without destroying it, so the fig
+   variant contains rather than covers, keeps the figure's own shape,
+   and drops the photographic frame — a transparent near-white-ink chart
+   was drawn to sit on the ground, not in a box. */
+article.takeaway.fig .tk-plate img{
+  aspect-ratio:auto; object-fit:contain; border-radius:0; box-shadow:none}
+article.takeaway ul{list-style:none; counter-reset:tk; padding-left:0; margin:0}
+article.takeaway li{
+  counter-increment:tk; position:relative;
+  margin:0; padding:.8rem 0 .8rem 2.5rem;
+  border-top:1px solid rgba(255,255,255,.10);
+  font-size:1.06rem; line-height:1.42}
+article.takeaway li:first-child{border-top:none}
+article.takeaway li::before{
+  content:counter(tk,decimal-leading-zero);
+  position:absolute; left:0; top:.95rem;
+  font:700 .8rem/1 'Barlow',sans-serif; letter-spacing:.1em;
+  color:var(--accent)}
+/* A sub-list is NOT another take-away. week03/wednesday's closing slide
+   nests one, and before the nesting fix reached this exporter it came
+   through flat and would have been numbered 04 as though it were a
+   fourth claim. Sub-items get no counter, no rule and no number — they
+   are the evidence under the claim above them. */
+article.takeaway li ul{margin:.45rem 0 0; padding-left:1.1rem;
+  list-style:disc; counter-reset:none}
+article.takeaway li li{
+  counter-increment:none; padding:.15rem 0; border-top:none;
+  font-size:.94rem; color:var(--ink-dim)}
+article.takeaway li li::before{content:none}
+article.takeaway li li::marker{color:var(--accent)}
+
+article.takeaway .tk-plate .aside{margin:.35rem 0 0}
+
+/* section dividers */
+article.divider{background:var(--panel-2); text-align:center;
+  padding:2.4rem 1.5rem; border-color:var(--rule)}
+article.divider h2{font-size:1.8rem; color:var(--accent)}
+
+/* speaker notes — instructor build only */
+.notes{background:rgba(255,255,255,.045);
+  border-left:3px solid var(--accent-2);
+  border-radius:0 8px 8px 0; padding:.85rem 1rem; margin-top:1.1rem;
+  font-size:.94rem}
+.notes::before{content:'Speaker notes'; display:block;
+  font:600 .66rem/1 'Barlow',sans-serif; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent-2); margin-bottom:.5rem}
+.notes p:first-of-type{margin-top:0}
+.notes p:last-child{margin-bottom:0}
+.notes .mustcover{color:var(--accent); font-weight:600}
+
+/* the deck index */
+.idx a{display:block; padding:.75rem 1rem; margin:.4rem 0;
+  background:var(--panel); border:1px solid rgba(255,255,255,.06);
+  border-radius:10px; color:var(--ink); text-decoration:none}
+.idx a:hover{border-color:var(--accent); color:var(--heading)}
+.idx a span{color:var(--ink-dim); font-size:.85rem; float:right}
+
+/* --- narrow screens ---------------------------------------------------
+   Two costs of the panel design on a phone, both measured, both fixed
+   here. (1) The header wrapped to 83px — 10% of the screen, and sticky,
+   so it was a permanent tax; dropping the meta line halves it. (2)
+   Nesting a notes card inside an article panel inside a padded main left
+   256px for text: a 32-character measure, worse than the flat exporter's
+   41. Panels earn their padding on a laptop and cannot afford it here. */
+@media (max-width:560px){
+  /* One line, always. Dropping the meta was not enough on its own: the
+     link group wrapped to a second row and the header still measured
+     77px. `nowrap` plus an ellipsised title holds it at ~35px. */
+  header{padding:.5rem .8rem; flex-wrap:nowrap; align-items:center}
+  header h1{font-size:.86rem; min-width:0; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis}
+  header .meta{display:none}
+  header .right{flex:none}
+  /* Full-bleed panels. The nesting tax is real — padded main + panel +
+     notes card left a 32-character measure — and the panel's inset
+     margins are the first thing that has to go at this width. */
+  main{padding:0}
+  article{padding:1rem .8rem; margin:.55rem 0; border-radius:0;
+    border-left:none; border-right:none}
+  article ul{padding-left:1rem}
+  .notes{padding:.7rem 0 .7rem .7rem; border-radius:0}
+  .toc{padding:0 .8rem}
+  .idx a{padding:.7rem .8rem}
+}
+
+/* =====================================================================
+   D41 — the 1/3 title, 2/3 content grid. Heading vertically centred
+   against the list. Stacked below 700px, so the phone read is untouched.
+   ===================================================================== */
+@media (min-width:700px){
+  :root{--measure:52rem}
+  article.grid{
+    display:grid;
+    grid-template-columns:1fr 2fr;
+    gap:1.8rem;
+    align-items:center;          /* Caleb's call: vertically centred */
+  }
+  article.grid > .col-title{min-width:0}
+  article.grid > .col-body{min-width:0}
+  article.grid > .notes{grid-column:1 / -1}
+  article.grid h2{margin-top:0}
+  article.grid .n{display:block; margin-bottom:.5rem}
+
+  /* layout-takeaway is the D41 grid's louder sibling: image left, the
+     numbered take-aways right, at 1fr / 1.32fr rather than 1fr / 2fr so
+     the photograph is a full partner rather than an illustration. Two
+     columns, two children, exactly like .col-title/.col-body above.
+
+     The image goes PORTRAIT here (4/5) and takes its height from its
+     own aspect ratio rather than from the length of the list, which is
+     what will keep 23 closing slides looking like the same slide. */
+  article.takeaway{
+    display:grid;
+    grid-template-columns:1fr 1.32fr;
+    column-gap:1.7rem;
+    align-items:center;
+  }
+  article.takeaway .tk-plate img{
+    aspect-ratio:4/5; max-height:min(62vh,27rem); margin:0}
+  article.takeaway.fig .tk-plate img{aspect-ratio:auto}
+  article.takeaway .tk-body{min-width:0; margin-top:0}
+  article.takeaway .n{display:block; margin-bottom:.45rem}
+  article.takeaway h2{margin-top:0}
+  article.takeaway > .notes{grid-column:1 / -1}
+}
+
+/* =====================================================================
+   D35 — presentation mode. ?present in the URL, or press P.
+   One article per screen, scroll-snap, projection type scale. With
+   JavaScript off none of this applies and the document simply scrolls
+   and reads, which is the intended degradation.
+   ===================================================================== */
+html.present{scroll-snap-type:y mandatory; overflow-y:scroll}
+html.present body{padding-bottom:0}
+html.present header,html.present .toc{display:none}
+html.present main{max-width:none; padding:0}
+html.present article{
+  min-height:100vh; margin:0; border:none; border-radius:0;
+  scroll-snap-align:start; scroll-margin-top:0;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:5vh 7vw;
+  overflow-y:auto;            /* a long slide scrolls rather than clips */
+  /* ...but never sideways. At 375px in presentation mode the article's
+     own vertical scrollbar leaves 8px of empty box wider than the
+     client width; no child actually overflows, so clipping it costs
+     nothing and saves a phantom horizontal scrollbar. */
+  overflow-x:clip;
+  background:var(--panel);
+}
+html.present article.grid{
+  display:grid; align-content:center; gap:4vw;
+  grid-template-columns:1fr 2fr;
+}
+/* Projection type: vw-based so it fills whatever the projector gives.
+   At 1280 this lands near 27px body and 45-55 character bullet lines,
+   which is the band that reads from the back of a room. */
+html.present{font-size:clamp(18px,2.1vw,34px)}
+html.present h2{font-size:clamp(1.5rem,2.9vw,2.6rem); line-height:1.15}
+html.present .col-body{max-width:48ch}
+html.present li{margin:.55em 0}
+html.present .notes{display:none}      /* never project the notes */
+html.present img{max-height:56vh; object-fit:contain}
+html.present .aside{font-size:.62em}
+html.present .n{position:fixed; bottom:2vh; right:3vw; opacity:.4}
+html.present article.divider{text-align:center; align-items:center}
+/* `html.present article{display:flex}` above scores (0,1,2) and would
+   otherwise flatten the takeaway grid; restate it at (0,2,2). Only above
+   700px — below that the takeaway stacks like everything else. */
+@media (min-width:700px){
+  html.present article.takeaway{
+    display:grid; align-content:center; align-items:center;
+    column-gap:4vw; grid-template-columns:1fr 1.32fr}
+  html.present article.takeaway .tk-plate img{max-height:74vh}
+}
+html.present article.takeaway h2{font-size:clamp(1.6rem,3.1vw,2.8rem)}
+html.present article.takeaway li{font-size:1em; padding:.7em 0 .7em 2.2em}
+html.present article.takeaway li::before{top:.85em; font-size:.62em}
+:root{--plate:url('assets/img/week09/dharavi_overview.jpg')}</style></head><body><header><h1>IA 310 <em>·</em> Week 9 · Monday</h1><span class='meta'>29 slides · student build</span><span class='right'><a href='index.html'>all decks</a><a href='?present'>present</a></span></header><details class='toc'><summary>Contents</summary><ol><li><a href='#s1'>Week 9 · Monday</a></li><li><a href='#s2'>Previously on Mapping World Cities . . .</a></li><li><a href='#s3'>Today on Mapping World Cities</a></li><li><a href='#s4'>Guest Starring . . .</a></li><li class='sec'><a href='#s5'>Who counts as informal</a><ol><li><a href='#s6'>Selective enforcement in Medellín (Straulino et al., 2022)</a></li></ol></li><li class='sec'><a href='#s7'>When informality persists</a><ol><li><a href='#s8'>Are informal settlements a temporary stage?</a></li><li><a href='#s9'>Four locks, not one (Tenaw et al., 2026)</a></li></ol></li><li class='sec'><a href='#s11'>Buenos Aires: policy and informality</a><ol><li><a href='#s12'>Restraining informal settlement</a></li><li><a href='#s13'>Buenos Aires closed the legal pathway, 1977 (van Gelder et al., 2016)</a></li><li><a href='#s14'>The settlement grew a rental market (van Gelder et al., 2016)</a></li><li><a href='#s16'>The price of being formal (Goytia et al., 2023)</a></li><li><a href='#s17'>Public rental housing in 232 Chinese cities (Cao et al., 2024)</a></li><li><a href='#s18'>Social ties after rehousing, Casablanca (Ben Haman, 2025)</a></li><li><a href='#s20'>Does community outweigh the dwelling? (Kshetrimayum et al., 2020)</a></li></ol></li><li class='sec'><a href='#s21'>What has been tried</a><ol><li><a href='#s22'>In-situ upgrading: The Kigali case (Ono &amp; Adrien, 2024)</a></li><li><a href='#s23'>Five instruments, defined</a></li><li><a href='#s24'>Land readjustment, in principle</a></li><li><a href='#s25'>Land readjustment in practice (García Fermín, 2024)</a></li><li><a href='#s26'>Inclusionary zoning by set-aside share (Azlan et al., 2025)</a></li><li><a href='#s27'>Performance-based codes in Queensland (Gallagher et al., 2025)</a></li><li><a href='#s28'>Low-cost construction systems (Muhammed et al., 2025)</a></li><li><a href='#s29'>What to take away</a></li></ol></li></ol></details><main><article id='s1'><div class='n'>01</div><h2>Informality</h2>
+<h2>Week 9 · Monday</h2></article><article id='s2' class='grid'><div class='col-title'><div class='n'>02</div><h2>Previously on Mapping World Cities . . .</h2></div><div class='col-body'><ul><li>Affordability is a ratio built for formal housing markets</li><li>Segregated cities built early and connected fewer</li><li>Access inside cities can be stratified by design</li></ul></div></article><article id='s3' class='grid'><div class='col-title'><div class='n'>03</div><h2>Today on Mapping World Cities</h2></div><div class='col-body'><ul><li>Informality tracks policy, not only poverty</li><li>Settlements may lock in through four reinforcing domains</li><li>Locally based upgrading works under the right conditions</li></ul></div></article><article id='s4'><div class='n'>04</div><h2>Guest Starring . . .</h2>
+<img loading="lazy" alt="Cities discussed today, with their periods" src="assets/img/week09/citymap_monday.png"></article><article id='s5' class='divider'><h2>Who counts as informal</h2></article><article id='s6'><div class='n'>06</div><h2>Selective enforcement in Medellín (Straulino et al., 2022)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Street-level view of lanes in Dharavi, Mumbai" src="assets/img/week09/dharavi_lanes_1.jpg">
+<p class='aside'><span class="caption">Dharavi, Mumbai. Gannu03, Wikimedia Commons, CC BY-SA 4.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Zoning non-compliance at 30–50% across all six strata</li><li>Highest, near 50%, in the wealthiest stratum</li><li>Informality is a legal status, not an income bracket</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s7' class='divider'><h2>When informality persists</h2></article><article id='s8'><div class='n'>08</div><h2>Are informal settlements a temporary stage?</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Aerial view of Makoko, Lagos" src="assets/img/week09/makoko_aerial_view.png">
+<p class='aside'><span class="caption">Makoko, Lagos. Kateregga1, Wikimedia Commons, CC BY-SA 4.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>About 1.1 billion people without legal tenure or basic services (UN-Habitat)</li><li>123 articles from 47 countries synthesized (Tenaw et al., 2026)</li><li>Colonial land practice set the pattern (Tenaw et al., 2026)</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s9' class='grid'><div class='col-title'><div class='n'>09</div><h2>Four locks, not one (Tenaw et al., 2026)</h2></div><div class='col-body'><ul><li>Institutional: weak governance, insecure tenure</li><li>Economic: no formal credit, precarious work</li><li>Political: patronage, corruption, displacement</li><li>Environmental: marginal land, climate vulnerability</li></ul></div></article><article id='s10'><div class='n'>10</div><blockquote><p>The solution lies in inclusive, just, and urban policies that integrate informal settlements into the broader city fabric without erasing their identity or community practices.</p></blockquote>
+<p>Tenaw et al. (2026)</p></article><article id='s11' class='divider'><h2>Buenos Aires: policy and informality</h2></article><article id='s12'><div class='n'>12</div><h2>Restraining informal settlement</h2>
+<img loading="lazy" alt="Informal settlement shares in four Latin American cities around 1970" src="assets/img/week09/informality_baseline.png">
+<p class='aside'><span class="caption">Informal settlement shares, four Latin American cities (van Gelder, Cravino & Ostuni, 2016).</span></p></article><article id='s13'><div class='n'>13</div><h2>Buenos Aires closed the legal pathway, 1977 (van Gelder et al., 2016)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Villa population in the City of Buenos Aires, 1976 to 2010" src="assets/img/week09/villa_series.png">
+<p class='aside'><span class="caption">Villa population, City of Buenos Aires, 1976–2010.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Land Use Law 8.912 in 1977 ended the <em>loteos populares</em></li><li>A sprawl-control measure, in its own terms</li><li>Infrastructure standards make land ownership inaccessible to poor households</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s14'><div class='n'>14</div><h2>The settlement grew a rental market (van Gelder et al., 2016)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="A villa miseria in Buenos Aires" src="assets/img/week09/ba_villa_miseria_2.jpg">
+<p class='aside'><span class="caption">A villa miseria, Buenos Aires. Aleposta, Wikimedia Commons, CC BY-SA 3.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>About half of villa residents were renters by 2010</li><li>Rents in some villas quadrupled between 2005 and 2010</li><li>Federal District land nearly tripled over the same years</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s15'><div class='n'>15</div><blockquote><p>While the villa remained the point of entry to the city for poor newcomers, the rented room became their point of entry to the villa.</p></blockquote>
+<p>van Gelder, Cravino &amp; Ostuni (2016)</p></article><article id='s16'><div class='n'>16</div><h2>The price of being formal (Goytia et al., 2023)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="The Puerto Madero skyline, Buenos Aires" src="assets/img/week09/ba_skyline_puerto_madero.jpg">
+<p class='aside'><span class="caption">Puerto Madero, Buenos Aires. Martin St-Amant, Wikimedia Commons, CC BY-SA 3.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Formal-sector access premium about 10% of median lower-income household income</li><li>Mostly tenure security and infrastructure</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s17'><div class='n'>17</div><h2>Public rental housing in 232 Chinese cities (Cao et al., 2024)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Public rental housing towers at Minxin Jiayuan, Chongqing" src="assets/img/week09/chongqing_prh_minxin_jiayuan.jpg">
+<p class='aside'><span class="caption">Minxin Jiayuan public rental housing, Chongqing, 2011. 杨志强Zhiqiang, Wikimedia Commons, CC BY-SA 3.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>About 70% of 232 cities show supply-demand mismatch</li><li>Only 31% achieve ideal matching, on 16.12 million units</li><li>Each 0.1-unit rise in fiscal autonomy tracks 13% less supply</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s18'><div class='n'>18</div><h2>Social ties after rehousing, Casablanca (Ben Haman, 2025)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="The Xipamanine neighbourhood, Maputo" src="assets/img/week09/maputo_xipamanine_neighborhood.jpg">
+<p class='aside'><span class="caption">Alex van Oostenrijk, Wikimedia Commons, CC BY-SA 3.0. Xipamanine, Maputo: a stand-in, since the library holds no image of Lebrahma or Al Marouwa.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>1,100 residents moved from Lebrahma into four-storey blocks</li><li>A random plot lottery scattered former neighbours</li><li>Mutual aid and reciprocity were the community's real infrastructure</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s19'><div class='n'>19</div><blockquote><p>There's nothing sociable about all these new apartments. They look like prison cells. It's about keeping people separate and isolated.</p></blockquote>
+<p>A resident, in Ben Haman (2025)</p></article><article id='s20'><div class='n'>20</div><h2>Does community outweigh the dwelling? (Kshetrimayum et al., 2020)</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<img loading="lazy" alt="Overview of Dharavi, Mumbai" src="assets/img/week09/dharavi_overview.jpg">
+<p class='aside'><span class="caption">Dharavi, Mumbai. Goodtrance, Wikimedia Commons, CC BY-SA 4.0.</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<ul><li>Community environment predicts satisfaction at 0.54</li><li>Dwelling-internal conditions predict satisfaction at 0.14</li><li>Water and electricity insignificant once universal</li></ul>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s21' class='divider'><h2>What has been tried</h2></article><article id='s22' class='grid'><div class='col-title'><div class='n'>22</div><h2>In-situ upgrading: The Kigali case (Ono &amp; Adrien, 2024)</h2></div><div class='col-body'><ul><li>32 resident-initiated facilities: roads, drainage, bridges, a tap</li><li>14 from single households, 10 from neighborhood funds</li><li>Land regularization covered 70% of Kigali, the enabling condition</li></ul></div></article><article id='s23' class='grid'><div class='col-title'><div class='n'>23</div><h2>Five instruments, defined</h2></div><div class='col-body'><ul><li>Land readjustment: pooling parcels, servicing them, replotting owners onto smaller serviced lots</li><li>Inclusionary zoning: a share of new homes required below market price</li><li>Performance-based codes: rules stating outcomes rather than prescribing built form</li><li>Low-cost construction systems: cheaper industrialised building methods, manufactured locally</li><li>Public housing provision: dwellings built, owned or subsidised by the state</li></ul></div></article><article id='s24'><div class='n'>24</div><h2>Land readjustment, in principle</h2>
+<img loading="lazy" alt="Three-panel diagram of land readjustment" src="assets/img/week09/land_readjustment.svg">
+<p class='aside'><span class="caption">Diagram drawn for this course; mechanism after García Fermín (2024).</span></p>
+<p class='aside'><span class="footnote"><span class="term">Land readjustment</span>: pooling adjacent parcels, taking a share of the pool for streets and a further share to sell, then replotting each owner onto a smaller parcel that is serviced.</span></p></article><article id='s25' class='grid'><div class='col-title'><div class='n'>25</div><h2>Land readjustment in practice (García Fermín, 2024)</h2></div><div class='col-body'><ul><li>Medellín's PILaR pilot: stalled at design in 2015, never implemented</li><li>Medellín's Juan Bobo: relabelled readjustment, 78% municipal land, no pooling</li><li>Ethiopia's Lidata: 1,093 of 1,100 informal families displaced</li></ul></div></article><article id='s26'><div class='n'>26</div><h2>Inclusionary zoning by set-aside share (Azlan et al., 2025)</h2>
+<img loading="lazy" alt="Positive integration outcomes by affordable set-aside band" src="assets/img/week09/inclusionary_bands.png">
+<p class='aside'><span class="caption">Share of studies reporting positive integration, by set-aside band; 50-study review.</span></p>
+<p class='aside'><span class="footnote"><span class="term">Inclusionary zoning</span>: a rule requiring a share of the homes in a new development to be sold or let below market price, usually in exchange for extra density or a fee.</span></p></article><article id='s27' class='grid'><div class='col-title'><div class='n'>27</div><h2>Performance-based codes in Queensland (Gallagher et al., 2025)</h2></div><div class='col-body'><ul><li>Queensland went performance-based in 1997</li><li>Developers still conform to prescriptive codes for approval certainty</li><li>Site cost ranked first for 40% of 231 projects</li></ul></div></article><article id='s28' class='grid'><div class='col-title'><div class='n'>28</div><h2>Low-cost construction systems (Muhammed et al., 2025)</h2></div><div class='col-body'><ul><li>Materials and labour are 60–80% of housing cost</li><li>Reusable plastic formwork cuts material and labour costs by up to 35%</li><li>Cheaper building systems do not touch land, tenure or zoning</li></ul></div></article><article id='s29' class='takeaway'><figure class='tk-plate'><img loading="lazy" alt="A villa miseria in Buenos Aires" src="assets/img/week09/ba_villa_miseria_2.jpg">
+<p class='aside'><span class="caption">A villa miseria, Buenos Aires. Aleposta, Wikimedia Commons, CC BY-SA 3.0.</span></p></figure><div class='tk-body'><div class='n'>29</div><h2>What to take away</h2><ul><li>Informality tracks policy, not only poverty: a closed legal pathway in Buenos Aires (van Gelder et al., 2016)</li><li>Settlements may lock in through four reinforcing domains: single-axis fixes fail (Tenaw et al., 2026)</li><li>Locally based upgrading works under the right conditions (Ono &amp; Adrien, 2024): community environment outweighs the dwelling (Kshetrimayum et al., 2020)</li></ul></div></article></main><script>
+(function(){
+  var present = new URLSearchParams(location.search).has('present');
+  if (present) document.documentElement.classList.add('present');
+
+  var arts = [].slice.call(document.querySelectorAll('article'));
+  if (!arts.length) return;
+  function current(){
+    var best = 0, bestD = Infinity;
+    for (var i = 0; i < arts.length; i++){
+      var d = Math.abs(arts[i].getBoundingClientRect().top);
+      if (d < bestD){ bestD = d; best = i; }
+    }
+    return best;
+  }
+  function go(step){
+    var i = Math.min(arts.length - 1, Math.max(0, current() + step));
+    arts[i].scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+    switch (e.key){
+      case 'PageDown': case 'ArrowRight': case 'ArrowDown': case ' ':
+        e.preventDefault(); go(1); break;
+      case 'PageUp': case 'ArrowLeft': case 'ArrowUp':
+        e.preventDefault(); go(-1); break;
+      case 'Home': e.preventDefault(); arts[0].scrollIntoView(); break;
+      case 'End': e.preventDefault(); arts[arts.length-1].scrollIntoView(); break;
+      case 'p': case 'P':
+        var u = new URL(location.href);
+        if (present) u.searchParams.delete('present');
+        else u.searchParams.set('present', '');
+        location.href = u.toString();
+        break;
+    }
+  });
+})();
+</script></body></html>

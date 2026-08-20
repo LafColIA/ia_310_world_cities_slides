@@ -1,0 +1,454 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Week 4 · Wednesday — student</title><link rel='stylesheet' href='assets/vendor/fonts/barlow.css'><style>
+:root{
+  --bg:#070b16; --bg-2:#101a30;
+  --ink:#dde5f4; --ink-dim:#8fa0c0; --heading:#ffffff;
+  --accent:#22d3ee; --accent-2:#f472b6;
+  --rule:rgba(34,211,238,.28);
+
+  /* D40, re-measured 2026-08-05 at Caleb's request ("drop the article
+     background opacity a bit more"). Was .91/.93; now .78/.80, which
+     roughly doubles the plate showing through (9% -> 22%).
+
+     THE SHADOW RULE IS UNCHANGED AND STILL HOLDS. This was measured
+     before it was chosen, against the two lightest, busiest plates in
+     the manifest — week07/monday (the Periplus world map, parchment and
+     high-contrast line work) and week07/wednesday (the 1882 London sewer
+     engraving) — composited through both overlays at 1280x720, 375x812
+     and full-bleed presentation mode:
+
+       panel alpha   --ink contrast   --ink-dim   worst 48px backdrop
+                                                  luminance range
+       .91           14.8:1           7.1:1       0.0018
+       .84           14.5:1           6.9:1       0.0031
+       .78           13.9:1           6.7:1       0.0057   <- chosen
+       .72           13.6:1           6.5:1       0.0072
+       .66           13.2:1           6.3:1       0.0090
+
+     AA is nowhere near the binding constraint -- the two overlays crush
+     the plate long before the panel does, and body ink stays above 13:1
+     down to .40. What actually degrades is TEXTURE: at .72 the Periplus
+     graticule is visible behind body prose and at .66 its place-names
+     are legible through the panel. .78 is the last value where the
+     photograph reads as ground rather than as competing content, so no
+     text-shadow is needed and none is added. Do not go lower without
+     re-running the same comparison on week07/monday. */
+  --panel:rgba(9,14,28,.78);
+  --panel-2:rgba(16,26,48,.80);
+
+  --measure:34rem;
+  --pad:clamp(1rem,3vw,2.2rem);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+/* The root carries the size and body inherits it in rem. Do NOT put an
+   absolute px size on body: it silently defeats the presentation-mode
+   clamp below, which is how the prototype first put 93-character bullet
+   lines on a projector. */
+html{font-size:17px; -webkit-text-size-adjust:100%; scroll-behavior:smooth;
+     background:var(--bg)}
+body{
+  margin:0; color:var(--ink); background:var(--bg);
+  font:400 1rem/1.62 'Barlow',-apple-system,BlinkMacSystemFont,'Segoe UI',
+       Roboto,Helvetica,Arial,sans-serif;
+  padding-bottom:4rem;
+}
+
+/* --- D40: the plate, fixed, with TWO overlays -------------------------
+   A single flat overlay at the opacity text needs turns the photograph
+   to mud; scrim.css found that and it is the load-bearing part. Fixed
+   rather than per-article so it does not jump on scroll or on a slide
+   advance — one continuous ground per deck, not thirty backgrounds.
+   Decks with no photograph get signal's own cyan/magenta field here. */
+body::before,body::after{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+body::before{
+  background-image:var(--plate,none);
+  background-size:cover; background-position:center;
+  filter:saturate(.7) contrast(1.03);
+}
+body::after{
+  background:
+    linear-gradient(180deg, rgba(7,11,22,.72) 0%, rgba(7,11,22,.88) 45%,
+                    rgba(7,11,22,.94) 100%),
+    radial-gradient(125% 85% at 50% 45%, transparent 0%, rgba(7,11,22,.6) 100%);
+}
+body>*{position:relative; z-index:1}
+
+/* --- chrome ---------------------------------------------------------- */
+header{
+  position:sticky; top:0; z-index:6;
+  background:rgba(7,11,22,.86); backdrop-filter:blur(9px);
+  border-bottom:1px solid var(--rule);
+  padding:.55rem var(--pad);
+  display:flex; gap:.8rem; align-items:baseline; flex-wrap:wrap;
+}
+header h1{font-size:1rem; font-weight:700; margin:0; letter-spacing:.01em;
+  text-transform:uppercase}
+header h1 em{font-style:normal; color:var(--accent)}
+header .meta{color:var(--ink-dim); font-size:.8rem}
+header a{color:var(--accent); font-size:.8rem; text-decoration:none}
+header .right{margin-left:auto; display:flex; gap:.9rem; align-items:baseline}
+/* The notes toggle stays a pure-CSS checkbox, so it works with JS off. */
+.toggle{color:var(--ink-dim); font-size:.8rem; cursor:pointer;
+  user-select:none; display:flex; align-items:center; gap:.35rem}
+.toggle:hover{color:var(--accent)}
+#nt{position:absolute; opacity:0; pointer-events:none}
+#nt:not(:checked) ~ main .notes{display:none}
+
+/* --- D36: table of contents ------------------------------------------
+   <details> so it costs no JavaScript. Divider slides are the top-level
+   sections; everything else nests under the one above it. Nothing else
+   was asked for — no progress bar, no jump controls, no deep links. */
+.toc{max-width:var(--measure); margin:1.4rem auto 0; padding:0 var(--pad)}
+.toc summary{cursor:pointer; color:var(--accent); font:600 .72rem/1 'Barlow',
+  sans-serif; letter-spacing:.14em; text-transform:uppercase;
+  padding:.6rem 0; list-style:none}
+.toc summary::-webkit-details-marker{display:none}
+.toc summary::before{content:'▸ '}
+.toc[open] summary::before{content:'▾ '}
+.toc ol{list-style:none; margin:.2rem 0 0; padding:0;
+  border-left:2px solid var(--rule)}
+.toc ol ol{border-left:none; margin:0}
+.toc li{margin:0}
+.toc a{display:block; padding:.3rem .8rem; color:var(--ink);
+  text-decoration:none; font-size:.92rem;
+  border-left:2px solid transparent; margin-left:-2px}
+.toc a:hover{color:var(--accent); border-left-color:var(--accent)}
+.toc .sec > a{color:var(--heading); font-weight:600; margin-top:.5rem}
+.toc ol ol a{padding-left:1.6rem; font-size:.88rem; color:var(--ink-dim)}
+.toc ol ol a:hover{color:var(--accent)}
+
+main{max-width:var(--measure); margin:0 auto; padding:0 var(--pad)}
+
+/* --- the article panel ------------------------------------------------ */
+article{
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:1.4rem 1.5rem;
+  margin:1.1rem 0;
+  scroll-margin-top:4.5rem;   /* clears the sticky header on anchor jumps */
+}
+.n{font:600 .68rem/1 'Barlow',sans-serif; letter-spacing:.16em;
+   text-transform:uppercase; color:var(--accent); opacity:.75}
+
+h2{font-size:1.44rem; line-height:1.2; margin:.4rem 0 .7rem;
+   font-weight:700; color:var(--heading);
+   /* D41 hazard: Marshall–Arrow–Romer is a 20-character token with no
+      break opportunity and overflows a third-width column without these. */
+   overflow-wrap:break-word; hyphens:auto}
+h3{font-size:1.06rem; margin:1rem 0 .4rem; font-weight:600;
+   color:var(--accent-2)}
+article ul{margin:.4rem 0 .8rem; padding-left:1.1rem}
+article li{margin:.34rem 0}
+article li::marker{color:var(--accent)}
+p{margin:.6rem 0}
+blockquote{margin:.9rem 0; padding:.2rem 0 .2rem 1rem;
+  border-left:3px solid var(--accent-2); font-style:italic; font-size:1.06rem}
+blockquote p{margin:0}
+blockquote p+p{margin-top:.55rem}
+blockquote .attrib{font-style:normal; font-size:.82em; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--accent)}
+.aside{color:var(--ink-dim); font-size:.84rem; margin:.4rem 0}
+.aside .term{font-style:italic; color:var(--ink)}
+a{color:var(--accent)}
+/* Found at 375px in the INSTRUCTOR build only, which is the argument for
+   checking both: week05/wednesday's notes name a 60-character library
+   path in `code`, one unbreakable token, and it pushed 232px of
+   horizontal scroll onto the whole document. */
+article,.notes{overflow-wrap:break-word}
+code{word-break:break-all; font-size:.92em}
+
+/* D34: no plate behind figures. They were drawn for exactly this ground —
+   transparent, near-white ink. The old #65001c block is deleted. */
+img{max-width:100%; height:auto; display:block; margin:.9rem auto;
+    border-radius:6px}
+
+/* =====================================================================
+   layout-takeaway — the closing slide (F13). One iconic image from the
+   lecture alongside the take-aways, more emphatic than a bullet slide.
+
+   Three things carry the emphasis, and none of them is a per-slide
+   override: the image is a CROPPED PLATE (aspect-ratio + object-fit,
+   not a contained figure, so it fills its column whatever shape the
+   source is), the heading gets signal's cyan-magenta rule, and the
+   take-aways are numbered and ruled instead of bulleted.
+
+   Stacked here; the two-column form is in the >=700px block below,
+   alongside the D41 grid it is a sibling of. The image's aspect ratio
+   changes with it — 16/9 stacked, 4/5 in a column — because a portrait
+   crop in a full-width phone panel eats the screen.
+   ===================================================================== */
+article.takeaway{background:var(--panel-2); border-color:var(--rule)}
+article.takeaway .tk-plate{margin:0}
+article.takeaway .tk-body{margin-top:.9rem}   /* reset in the grid below */
+article.takeaway h2{font-size:1.6rem; margin:.35rem 0 .2rem}
+article.takeaway h2::after{
+  content:''; display:block; width:4.5rem; height:3px; margin:.6rem 0 .9rem;
+  border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+/* Two classes on purpose. `html.present img{max-height:56vh;
+   object-fit:contain}` scores (0,1,2); a one-class selector loses to it
+   and the plate comes back letterboxed inside its own frame. */
+article.takeaway .tk-plate img{
+  width:100%; aspect-ratio:16/9; object-fit:cover; object-position:center;
+  max-height:none; margin:.2rem 0 .5rem; border-radius:10px;
+  box-shadow:0 0 0 1px rgba(34,211,238,.18),0 18px 50px -22px rgba(0,0,0,.95)}
+/* `class="layout-takeaway fig"` — the no-photograph case (F13: "figure
+   or map is an acceptable iconic image"). week15/monday and
+   week04/monday are generated figures end to end. A chart cannot be
+   CROPPED to a portrait column without destroying it, so the fig
+   variant contains rather than covers, keeps the figure's own shape,
+   and drops the photographic frame — a transparent near-white-ink chart
+   was drawn to sit on the ground, not in a box. */
+article.takeaway.fig .tk-plate img{
+  aspect-ratio:auto; object-fit:contain; border-radius:0; box-shadow:none}
+article.takeaway ul{list-style:none; counter-reset:tk; padding-left:0; margin:0}
+article.takeaway li{
+  counter-increment:tk; position:relative;
+  margin:0; padding:.8rem 0 .8rem 2.5rem;
+  border-top:1px solid rgba(255,255,255,.10);
+  font-size:1.06rem; line-height:1.42}
+article.takeaway li:first-child{border-top:none}
+article.takeaway li::before{
+  content:counter(tk,decimal-leading-zero);
+  position:absolute; left:0; top:.95rem;
+  font:700 .8rem/1 'Barlow',sans-serif; letter-spacing:.1em;
+  color:var(--accent)}
+/* A sub-list is NOT another take-away. week03/wednesday's closing slide
+   nests one, and before the nesting fix reached this exporter it came
+   through flat and would have been numbered 04 as though it were a
+   fourth claim. Sub-items get no counter, no rule and no number — they
+   are the evidence under the claim above them. */
+article.takeaway li ul{margin:.45rem 0 0; padding-left:1.1rem;
+  list-style:disc; counter-reset:none}
+article.takeaway li li{
+  counter-increment:none; padding:.15rem 0; border-top:none;
+  font-size:.94rem; color:var(--ink-dim)}
+article.takeaway li li::before{content:none}
+article.takeaway li li::marker{color:var(--accent)}
+
+article.takeaway .tk-plate .aside{margin:.35rem 0 0}
+
+/* section dividers */
+article.divider{background:var(--panel-2); text-align:center;
+  padding:2.4rem 1.5rem; border-color:var(--rule)}
+article.divider h2{font-size:1.8rem; color:var(--accent)}
+
+/* speaker notes — instructor build only */
+.notes{background:rgba(255,255,255,.045);
+  border-left:3px solid var(--accent-2);
+  border-radius:0 8px 8px 0; padding:.85rem 1rem; margin-top:1.1rem;
+  font-size:.94rem}
+.notes::before{content:'Speaker notes'; display:block;
+  font:600 .66rem/1 'Barlow',sans-serif; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent-2); margin-bottom:.5rem}
+.notes p:first-of-type{margin-top:0}
+.notes p:last-child{margin-bottom:0}
+.notes .mustcover{color:var(--accent); font-weight:600}
+
+/* the deck index */
+.idx a{display:block; padding:.75rem 1rem; margin:.4rem 0;
+  background:var(--panel); border:1px solid rgba(255,255,255,.06);
+  border-radius:10px; color:var(--ink); text-decoration:none}
+.idx a:hover{border-color:var(--accent); color:var(--heading)}
+.idx a span{color:var(--ink-dim); font-size:.85rem; float:right}
+
+/* --- narrow screens ---------------------------------------------------
+   Two costs of the panel design on a phone, both measured, both fixed
+   here. (1) The header wrapped to 83px — 10% of the screen, and sticky,
+   so it was a permanent tax; dropping the meta line halves it. (2)
+   Nesting a notes card inside an article panel inside a padded main left
+   256px for text: a 32-character measure, worse than the flat exporter's
+   41. Panels earn their padding on a laptop and cannot afford it here. */
+@media (max-width:560px){
+  /* One line, always. Dropping the meta was not enough on its own: the
+     link group wrapped to a second row and the header still measured
+     77px. `nowrap` plus an ellipsised title holds it at ~35px. */
+  header{padding:.5rem .8rem; flex-wrap:nowrap; align-items:center}
+  header h1{font-size:.86rem; min-width:0; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis}
+  header .meta{display:none}
+  header .right{flex:none}
+  /* Full-bleed panels. The nesting tax is real — padded main + panel +
+     notes card left a 32-character measure — and the panel's inset
+     margins are the first thing that has to go at this width. */
+  main{padding:0}
+  article{padding:1rem .8rem; margin:.55rem 0; border-radius:0;
+    border-left:none; border-right:none}
+  article ul{padding-left:1rem}
+  .notes{padding:.7rem 0 .7rem .7rem; border-radius:0}
+  .toc{padding:0 .8rem}
+  .idx a{padding:.7rem .8rem}
+}
+
+/* =====================================================================
+   D41 — the 1/3 title, 2/3 content grid. Heading vertically centred
+   against the list. Stacked below 700px, so the phone read is untouched.
+   ===================================================================== */
+@media (min-width:700px){
+  :root{--measure:52rem}
+  article.grid{
+    display:grid;
+    grid-template-columns:1fr 2fr;
+    gap:1.8rem;
+    align-items:center;          /* Caleb's call: vertically centred */
+  }
+  article.grid > .col-title{min-width:0}
+  article.grid > .col-body{min-width:0}
+  article.grid > .notes{grid-column:1 / -1}
+  article.grid h2{margin-top:0}
+  article.grid .n{display:block; margin-bottom:.5rem}
+
+  /* layout-takeaway is the D41 grid's louder sibling: image left, the
+     numbered take-aways right, at 1fr / 1.32fr rather than 1fr / 2fr so
+     the photograph is a full partner rather than an illustration. Two
+     columns, two children, exactly like .col-title/.col-body above.
+
+     The image goes PORTRAIT here (4/5) and takes its height from its
+     own aspect ratio rather than from the length of the list, which is
+     what will keep 23 closing slides looking like the same slide. */
+  article.takeaway{
+    display:grid;
+    grid-template-columns:1fr 1.32fr;
+    column-gap:1.7rem;
+    align-items:center;
+  }
+  article.takeaway .tk-plate img{
+    aspect-ratio:4/5; max-height:min(62vh,27rem); margin:0}
+  article.takeaway.fig .tk-plate img{aspect-ratio:auto}
+  article.takeaway .tk-body{min-width:0; margin-top:0}
+  article.takeaway .n{display:block; margin-bottom:.45rem}
+  article.takeaway h2{margin-top:0}
+  article.takeaway > .notes{grid-column:1 / -1}
+}
+
+/* =====================================================================
+   D35 — presentation mode. ?present in the URL, or press P.
+   One article per screen, scroll-snap, projection type scale. With
+   JavaScript off none of this applies and the document simply scrolls
+   and reads, which is the intended degradation.
+   ===================================================================== */
+html.present{scroll-snap-type:y mandatory; overflow-y:scroll}
+html.present body{padding-bottom:0}
+html.present header,html.present .toc{display:none}
+html.present main{max-width:none; padding:0}
+html.present article{
+  min-height:100vh; margin:0; border:none; border-radius:0;
+  scroll-snap-align:start; scroll-margin-top:0;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:5vh 7vw;
+  overflow-y:auto;            /* a long slide scrolls rather than clips */
+  /* ...but never sideways. At 375px in presentation mode the article's
+     own vertical scrollbar leaves 8px of empty box wider than the
+     client width; no child actually overflows, so clipping it costs
+     nothing and saves a phantom horizontal scrollbar. */
+  overflow-x:clip;
+  background:var(--panel);
+}
+html.present article.grid{
+  display:grid; align-content:center; gap:4vw;
+  grid-template-columns:1fr 2fr;
+}
+/* Projection type: vw-based so it fills whatever the projector gives.
+   At 1280 this lands near 27px body and 45-55 character bullet lines,
+   which is the band that reads from the back of a room. */
+html.present{font-size:clamp(18px,2.1vw,34px)}
+html.present h2{font-size:clamp(1.5rem,2.9vw,2.6rem); line-height:1.15}
+html.present .col-body{max-width:48ch}
+html.present li{margin:.55em 0}
+html.present .notes{display:none}      /* never project the notes */
+html.present img{max-height:56vh; object-fit:contain}
+html.present .aside{font-size:.62em}
+html.present .n{position:fixed; bottom:2vh; right:3vw; opacity:.4}
+html.present article.divider{text-align:center; align-items:center}
+/* `html.present article{display:flex}` above scores (0,1,2) and would
+   otherwise flatten the takeaway grid; restate it at (0,2,2). Only above
+   700px — below that the takeaway stacks like everything else. */
+@media (min-width:700px){
+  html.present article.takeaway{
+    display:grid; align-content:center; align-items:center;
+    column-gap:4vw; grid-template-columns:1fr 1.32fr}
+  html.present article.takeaway .tk-plate img{max-height:74vh}
+}
+html.present article.takeaway h2{font-size:clamp(1.6rem,3.1vw,2.8rem)}
+html.present article.takeaway li{font-size:1em; padding:.7em 0 .7em 2.2em}
+html.present article.takeaway li::before{top:.85em; font-size:.62em}
+:root{--plate:url('assets/img/week04/teotihuacan_aerial_view.jpg')}</style></head><body><header><h1>IA 310 <em>·</em> Week 4 · Wednesday</h1><span class='meta'>23 slides · student build</span><span class='right'><a href='index.html'>all decks</a><a href='?present'>present</a></span></header><details class='toc'><summary>Contents</summary><ol><li><a href='#s1'>Week 4 · Wednesday</a></li><li><a href='#s2'>Previously on Mapping World Cities . . .</a></li><li><a href='#s3'>Today on Mapping World Cities</a></li><li><a href='#s4'>Guest Starring . . .</a></li><li class='sec'><a href='#s5'>The ceiling</a><ol><li><a href='#s6'>An hour a day, at walking pace (Bakker &amp; Rauch, 2026)</a></li><li><a href='#s7'>Pre-industrial travel speeds</a></li><li><a href='#s8'>Edo in 1849</a></li><li><a href='#s9'>The railway against the horse (Bakker &amp; Rauch, 2026)</a></li></ol></li><li class='sec'><a href='#s10'>Modes and urban geography</a><ol><li><a href='#s11'>Rail concentrates, the car fills</a></li><li><a href='#s12'>How rail gated growth</a></li><li><a href='#s13'>Corridors, in Hoyt's version</a></li><li><a href='#s14'>Cars and polycentricity</a></li><li><a href='#s15'>Rings and pockets in the car city (Renninger et al., 2025)</a></li><li><a href='#s16'>The commuting field expands (Beer, 2025)</a></li></ol></li><li class='sec'><a href='#s17'>Who gets access</a><ol><li><a href='#s18'>Access is unequal</a></li><li><a href='#s19'>Teotihuacan, AD 350–600</a></li><li><a href='#s20'>Same city, same plazas, different walk (Norwood et al., 2024)</a></li><li><a href='#s21'>Allocating movement</a></li><li><a href='#s22'>Water and movement share a channel</a></li><li><a href='#s23'>What to take away</a></li></ol></li></ol></details><main><article id='s1'><div class='n'>01</div><h2>Moving Within the City</h2>
+<h2>Week 4 · Wednesday</h2></article><article id='s2' class='grid'><div class='col-title'><div class='n'>02</div><h2>Previously on Mapping World Cities . . .</h2></div><div class='col-body'><ul><li>Rent and density both fall with distance (Alonso, 1964)</li><li>The rate of decline is set by what distance costs</li><li>Today: where commuting cost comes from</li></ul></div></article><article id='s3' class='grid'><div class='col-title'><div class='n'>03</div><h2>Today on Mapping World Cities</h2></div><div class='col-body'><ul><li>A travel-time budget capped the pre-industrial city</li><li>Transportation technologies have raised the cap</li><li>Transportation modes affect urban geographies</li></ul></div></article><article id='s4'><div class='n'>04</div><h2>Guest Starring . . .</h2>
+<img loading="lazy" alt="Cities discussed today, with their periods" src="assets/img/week04/citymap_wednesday.png"></article><article id='s5' class='divider'><h2>The ceiling</h2></article><article id='s6' class='grid'><div class='col-title'><div class='n'>06</div><h2>An hour a day, at walking pace (Bakker &amp; Rauch, 2026)</h2></div><div class='col-body'><ul><li>One hour at 5 km/h gives a 2.5 km radius</li><li>Roughly 20 km² of city (about 1.6 times the area of Easton, PA)</li><li>Pre-industrial commutes were 2–3 km on foot</li></ul></div></article><article id='s7'><div class='n'>07</div><h2>Pre-industrial travel speeds</h2>
+<img loading="lazy" alt="Daily travel ranges by mode are near-identical between Antiquity and the medieval period" src="assets/img/week04/travel_speeds.png">
+<p class='aside'><span class="caption">Daily travel ranges by mode, harmonised to km/day (Bakker & Rauch, 2026).</span></p></article><article id='s8'><div class='n'>08</div><h2>Edo in 1849</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<ul><li>Maximum practical span about 16 km by road (Ichikawa, 1994)</li><li>Shinagawa in the south to Itabashi in the north</li><li>Growth past the 16 km bound converted into density</li></ul>
+<p class='aside'><span class="footnote"><span class="term">li</span>: a Japanese unit of distance, about 3.9 km (Ichikawa, 1994).</span></p>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<img loading="lazy" alt="A woodblock map of Edo, the castle at the centre and the warrior districts around the castle" src="assets/img/week04/edo_map_1849.jpg">
+<p class='aside'><span class="caption">1849 Japanese map of Edo, north to the right. No scale bar: distances come as a table, Shinagawa 2 li, about 7.9 km, by road. Geographicus collection, Wikimedia Commons. Public domain.</span></p>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s9'><div class='n'>09</div><h2>The railway against the horse (Bakker &amp; Rauch, 2026)</h2>
+<img loading="lazy" alt="Railway freight charges in 1870 at 5% of a horse-drawn wagon in 1700; railway journey times at 10% of a stage coach&#x27;s" src="assets/img/week04/the_1870_break.png">
+<p class='aside'><span class="caption">A real money charge and a travel time, each against the 1700 horse-drawn benchmark for the same job (Bakker &amp; Rauch, 2026).</span></p></article><article id='s10' class='divider'><h2>Modes and urban geography</h2></article><article id='s11'><div class='n'>11</div><h2>Rail concentrates, the car fills</h2>
+<img loading="lazy" alt="Rail gathers density at stations along a corridor; the car spreads density evenly across the surface and thins the centre" src="assets/img/week04/mode_geometry.png"></article><article id='s12'><div class='n'>12</div><h2>How rail gated growth</h2>
+<img loading="lazy" alt="The opening of the Liverpool and Manchester Railway" src="assets/img/week04/manchester_liverpool_railway_opening.jpg">
+<p class='aside'><span class="caption">Opening of the Liverpool and Manchester Railway, 1830. Wikimedia Commons.</span></p></article><article id='s13'><div class='n'>13</div><h2>Corridors, in Hoyt's version</h2>
+<img loading="lazy" alt="Hoyt&#x27;s sector model: wedges of industry and of each housing class radiating from the centre" src="assets/img/week04/prior_course/1000px-Hoyt_model_white.png">
+<p class='aside'><span class="caption">Hoyt sector model. Wikimedia Commons.</span></p></article><article id='s14'><div class='n'>14</div><h2>Cars and polycentricity</h2>
+<img loading="lazy" alt="Harris and Ullman&#x27;s multiple-nuclei model: several business and industrial districts rather than one" src="assets/img/week04/prior_course/Multiple_nuclei_model_white.png">
+<p class='aside'><span class="caption">Harris and Ullman multiple-nuclei model. Wikimedia Commons.</span></p></article><article id='s15' class='grid'><div class='col-title'><div class='n'>15</div><h2>Rings and pockets in the car city (Renninger et al., 2025)</h2></div><div class='col-body'><ul><li>Isolated rings: suburban bands whose residents mix mostly with each other</li><li>Segregated pockets: central blocks drawing visitors from one income band</li><li>Rings sit 10–25 km out, four to ten times the walking city's 2.5 km radius</li><li>Distance from the centre, then income, then race predict ring or pocket</li></ul>
+<img loading="lazy" alt="Subdivisions, townhouse rows and strip retail filling a wooded valley in suburban Cobb County" src="assets/img/week04/atlanta_cobb_county_suburbs.jpg">
+<p class='aside'><span class="caption">Cobb County, Georgia, northwest of Atlanta. Idawriter, via Panoramio. Wikimedia Commons, CC BY-SA 3.0.</span></p></div></article><article id='s16' class='grid'><div class='col-title'><div class='n'>16</div><h2>The commuting field expands (Beer, 2025)</h2></div><div class='col-body'><ul><li>Central Coast, New South Wales: 30,000 residents in 1945, nearly 300,000 by 2001</li><li>A third of the region's workforce commuted 50 km or more to Sydney by the 1990s</li><li>Households bought coastal amenity rather than only cheaper land</li><li>The commuting field widened faster than the built-up area</li></ul></div></article><article id='s17' class='divider'><h2>Who gets access</h2></article><article id='s18' class='grid'><div class='col-title'><div class='n'>18</div><h2>Access is unequal</h2></div><div class='col-body'><ul><li>Mobility is distributed as unevenly as income</li><li>Spatial sorting compounds through schools and jobs</li><li>Monday's rent gradient is the price side of the same story</li></ul></div></article><article id='s19'><div class='n'>19</div><h2>Teotihuacan, AD 350–600</h2>
+<img loading="lazy" alt="Aerial view of Teotihuacan&#x27;s residential grid running away from the monumental core" src="assets/img/week04/teotihuacan_aerial_view.jpg">
+<p class='aside'><span class="caption">Teotihuacan from the air. ProtoplasmaKid, Wikimedia Commons, CC BY-SA 4.0.</span></p></article><article id='s20' class='grid'><div class='col-title'><div class='n'>20</div><h2>Same city, same plazas, different walk (Norwood et al., 2024)</h2></div><div class='col-body'><ul><li>97% of elite compounds sit within a 5-minute walk of a plaza</li><li>52% of everyone else's do</li><li>The plazas are neither sited in elite districts nor closed to anyone, so the gap comes entirely from where people already live</li></ul></div></article><article id='s21' class='grid'><div class='col-title'><div class='n'>21</div><h2>Allocating movement</h2></div><div class='col-body'><ul><li>Road space is finite</li><li>Dividing road space is a political act as well as an engineering one</li><li>The division repeatedly favours through-movement over frontage use</li><li>Smallest and least organised users usually lose</li></ul></div></article><article id='s22'><div class='n'>22</div><h2>Water and movement share a channel</h2>
+<p class='aside'><div class="col-wrap"></p>
+<p class='aside'><div class="col-left"></p>
+<ul><li>An intramural canal is a street carrying water</li><li>A street graded for wheels is also a drain</li><li>Converting the channel for one function converts the channel for both</li></ul>
+<p class='aside'></div></p>
+<p class='aside'><div class="col-right"></p>
+<img loading="lazy" alt="A bridge over the Beijing-Hangzhou Grand Canal" src="assets/img/week04/grand_canal_beijing_hangzhou_bridge.jpg">
+<p class='aside'><span class="caption">Bridge over the Beijing–Hangzhou Grand Canal. Wikimedia Commons.</span></p>
+<p class='aside'></div></p>
+<p class='aside'></div></p></article><article id='s23' class='takeaway'><figure class='tk-plate'><img loading="lazy" alt="Aerial view of Teotihuacan" src="assets/img/week04/teotihuacan_aerial_view_plate.jpg">
+<p class='aside'><span class="caption">Teotihuacan from the air. ProtoplasmaKid, Wikimedia Commons, CC BY-SA 4.0.</span></p></figure><div class='tk-body'><div class='n'>23</div><h2>What to take away</h2><ul><li>A travel-time budget capped the pre-industrial city: one hour a day at walking pace (Bakker &amp; Rauch, 2026)</li><li>Transportation technologies have raised the cap: railway journeys at 10% of coach time</li><li>Transportation modes affect urban geographies: rings, wedges, many centres</li></ul></div></article></main><script>
+(function(){
+  var present = new URLSearchParams(location.search).has('present');
+  if (present) document.documentElement.classList.add('present');
+
+  var arts = [].slice.call(document.querySelectorAll('article'));
+  if (!arts.length) return;
+  function current(){
+    var best = 0, bestD = Infinity;
+    for (var i = 0; i < arts.length; i++){
+      var d = Math.abs(arts[i].getBoundingClientRect().top);
+      if (d < bestD){ bestD = d; best = i; }
+    }
+    return best;
+  }
+  function go(step){
+    var i = Math.min(arts.length - 1, Math.max(0, current() + step));
+    arts[i].scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+    switch (e.key){
+      case 'PageDown': case 'ArrowRight': case 'ArrowDown': case ' ':
+        e.preventDefault(); go(1); break;
+      case 'PageUp': case 'ArrowLeft': case 'ArrowUp':
+        e.preventDefault(); go(-1); break;
+      case 'Home': e.preventDefault(); arts[0].scrollIntoView(); break;
+      case 'End': e.preventDefault(); arts[arts.length-1].scrollIntoView(); break;
+      case 'p': case 'P':
+        var u = new URL(location.href);
+        if (present) u.searchParams.delete('present');
+        else u.searchParams.set('present', '');
+        location.href = u.toString();
+        break;
+    }
+  });
+})();
+</script></body></html>

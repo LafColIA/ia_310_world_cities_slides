@@ -1,0 +1,77 @@
+<svg width="1100" height="660" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 660" font-family="Barlow, sans-serif">
+  <!-- Cowgill's anti-typology move, drawn as parallel coordinates:
+       a settlement is a line across continuous axes, not a member of a box.
+       Palette from scripts/theme_slides.R (signal: cyan / magenta / amber,
+       #9fb0cc gridlines). Background stays transparent.
+
+       2026-08-05, feedback pass: the left gutter was 150 px, so
+       "Division of labour" and "Public amenities" ran off the left edge
+       of the viewBox and were clipped in the browser (Caleb, W1M). The
+       axis lines now start at x = 270, leaving ~245 px for the longest
+       label at font-size 26, and the height went 620 -> 660 so the
+       legend's descenders sit inside the box. Series colours were also
+       moved off the retired maroon-era palette; the old #6fc0e8 sat
+       almost on top of signal's cyan. -->
+
+  <g stroke="#9fb0cc" stroke-width="1.4" opacity="0.55">
+    <line x1="270" y1="90"  x2="1060" y2="90"/>
+    <line x1="270" y1="178" x2="1060" y2="178"/>
+    <line x1="270" y1="266" x2="1060" y2="266"/>
+    <line x1="270" y1="354" x2="1060" y2="354"/>
+    <line x1="270" y1="442" x2="1060" y2="442"/>
+    <line x1="270" y1="530" x2="1060" y2="530"/>
+  </g>
+
+  <g fill="#f4f2ef" font-size="26" text-anchor="end">
+    <text x="252" y="97" font-weight="600">Area</text>
+    <text x="252" y="185" font-weight="600">Population</text>
+    <text x="252" y="273" font-weight="600">Planning</text>
+    <text x="252" y="361" font-weight="600">Segmentation</text>
+    <text x="252" y="449" font-weight="600">Division of labour</text>
+    <text x="252" y="537" font-weight="600">Public amenities</text>
+  </g>
+
+  <g fill="#9fb0cc" font-size="20">
+    <text x="270" y="576" font-weight="600">low</text>
+    <text x="1060" y="576" font-weight="600" text-anchor="end">high</text>
+  </g>
+
+  <!-- Angkor: vast, populous, planned, low segmentation -->
+  <polyline points="1006,90 933,178 769,266 433,354 606,442 688,530"
+            fill="none" stroke="#22d3ee" stroke-width="3.5"
+            stroke-linejoin="round" opacity="0.95"/>
+  <g fill="#22d3ee">
+    <circle cx="1006" cy="90" r="7"/><circle cx="933" cy="178" r="7"/>
+    <circle cx="769" cy="266" r="7"/><circle cx="433" cy="354" r="7"/>
+    <circle cx="606" cy="442" r="7"/><circle cx="688" cy="530" r="7"/>
+  </g>
+
+  <!-- Uruk: compact, dense, walled, stratified -->
+  <polyline points="515,90 715,178 842,266 887,354 906,442 860,530"
+            fill="none" stroke="#f472b6" stroke-width="3.5"
+            stroke-linejoin="round" opacity="0.95"/>
+  <g fill="#f472b6">
+    <circle cx="515" cy="90" r="7"/><circle cx="715" cy="178" r="7"/>
+    <circle cx="842" cy="266" r="7"/><circle cx="887" cy="354" r="7"/>
+    <circle cx="906" cy="442" r="7"/><circle cx="860" cy="530" r="7"/>
+  </g>
+
+  <!-- Çatalhöyük: over the population bar, flat on everything else -->
+  <polyline points="361,90 561,178 352,266 315,354 325,442 343,530"
+            fill="none" stroke="#fbbf24" stroke-width="3.5"
+            stroke-linejoin="round" opacity="0.95"/>
+  <g fill="#fbbf24">
+    <circle cx="361" cy="90" r="7"/><circle cx="561" cy="178" r="7"/>
+    <circle cx="352" cy="266" r="7"/><circle cx="315" cy="354" r="7"/>
+    <circle cx="325" cy="442" r="7"/><circle cx="343" cy="530" r="7"/>
+  </g>
+
+  <g font-size="26">
+    <circle cx="278" cy="618" r="7" fill="#22d3ee"/>
+    <text x="294" y="625" fill="#f4f2ef" font-weight="600">Angkor</text>
+    <circle cx="438" cy="618" r="7" fill="#f472b6"/>
+    <text x="454" y="625" fill="#f4f2ef" font-weight="600">Uruk</text>
+    <circle cx="558" cy="618" r="7" fill="#fbbf24"/>
+    <text x="574" y="625" fill="#f4f2ef" font-weight="600">&#199;atalh&#246;y&#252;k</text>
+  </g>
+</svg>

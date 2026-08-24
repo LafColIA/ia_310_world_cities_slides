@@ -1,6 +1,6 @@
 > ## Read the lectures here
 >
-> ### https://lafcolia.github.io/ia_310_world_cities_slides/
+> https://lafcolia.github.io/ia_310_world_cities_slides/
 
 **IA 310 · Mapping World Cities** — Lafayette College, Fall 2026
 Taught by Caleb Gallemore

@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Long Haul</title>
+<meta name="description" content="A shared-laptop card game for World Cities, Week 7: six cities, one deck, about half an hour.">
+<link rel="stylesheet" href="../../assets/vendor/fonts/barlow.css">
+<style>
+:root{
+  --bg:#070b16; --bg-2:#101a30; --panel:#0d1528; --panel-2:#131e38;
+  --ink:#dde5f4; --ink-dim:#8fa0c0; --heading:#ffffff;
+  --accent:#22d3ee; --rule:rgba(34,211,238,.28);
+  --warn:#fbbf24; --food:#e8c07a; --trade:#7dd3fc;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{font-size:17px;background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--ink);background:var(--bg);
+  font:400 1rem/1.45 'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+h1,h2,h3{color:var(--heading);margin:0;font-weight:700;line-height:1.15}
+b,strong{color:var(--heading)}
+.ico{width:1.1em;height:1.1em;flex:none;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--rule);background:var(--panel-2);border-radius:8px;padding:.45rem .9rem;font-weight:600}
+.btn:hover,.btn:focus-visible{border-color:var(--accent);outline:none}
+.btn.primary{background:var(--accent);color:#04202a;border-color:var(--accent);font-weight:700}
+.btn.primary:hover,.btn.primary:focus-visible{filter:brightness(1.1);outline:3px solid #fff;outline-offset:2px}
+.btn.big{font-size:1.25rem;padding:.6rem 1.4rem}
+.btn.ghost{background:transparent}
+.dim{color:var(--ink-dim)}
+.food{color:var(--food)} .trade{color:var(--trade)}
+
+/* ---------- setup ---------- */
+.setup{max-width:62rem;margin:0 auto;padding:2rem 1rem 3rem}
+.setup h1{font-size:3rem;letter-spacing:.01em}
+.setup .lede{font-size:1.25rem;color:var(--ink-dim);margin:.3rem 0 1.6rem}
+.seats{display:grid;grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr));gap:.8rem;margin-bottom:1.4rem}
+.seat{background:var(--panel);border:1px solid var(--rule);border-top:5px solid var(--cc);border-radius:10px;padding:.8rem .9rem;display:flex;flex-direction:column;gap:.35rem}
+.seat h2{font-size:1.3rem;display:flex;align-items:center;gap:.45rem}
+.seat .model{color:var(--ink-dim);font-size:.9rem}
+.seat .ab{font-size:.92rem}
+.who-plays{display:flex;gap:.3rem;margin-top:auto;padding-top:.4rem}
+.who-plays button{flex:1;border:1px solid var(--rule);background:transparent;border-radius:6px;padding:.3rem;font-size:.85rem}
+.who-plays button[aria-pressed="true"]{background:var(--accent);color:#04202a;border-color:var(--accent);font-weight:700}
+.setup .row{display:flex;flex-wrap:wrap;gap:1rem 2rem;align-items:center;margin:.8rem 0}
+.setup label{font-weight:600}
+.setup input[type=text],.setup input[type=number]{font:inherit;width:6rem;padding:.35rem .5rem;border-radius:6px;border:1px solid var(--rule);background:var(--panel-2);color:var(--heading);font-weight:700;margin-left:.4rem}
+.setup .hint{color:var(--ink-dim);font-size:.92rem;margin:.2rem 0 0;max-width:42rem}
+.setup .go{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.4rem}
+.initial{display:inline-grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--cc);color:#0a0f1c;font-weight:700;font-size:.8em;flex:none}
+
+/* ---------- game ---------- */
+#game{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"bar bar" "board panel" "log panel";height:100vh;gap:.55rem;padding:.55rem}
+.box{background:var(--panel);border:1px solid var(--rule);border-radius:10px}
+.bar{grid-area:bar;display:flex;align-items:center;gap:.4rem 1rem;flex-wrap:wrap;padding:.4rem .7rem}
+.bar .title{font-weight:700;color:var(--heading);font-size:1.05rem}
+.bar .round{font-weight:700;font-size:1.1rem}
+.bar .turn{font-size:1.35rem;font-weight:700;color:var(--heading);display:flex;align-items:center;gap:.45rem}
+.chips{display:flex;gap:.35rem;flex-wrap:wrap}
+.chip{font-size:.8rem;border:1px solid var(--rule);border-radius:999px;padding:.08rem .55rem;color:var(--ink)}
+.chip.hot{border-color:var(--warn);color:var(--warn)}
+.bar .spacer{flex:1}
+.timer{font-variant-numeric:tabular-nums;color:var(--ink-dim);font-size:.95rem}
+.timer.slow{color:var(--warn);font-weight:700}
+.board{grid-area:board;display:flex;flex-direction:column;min-height:0;padding:.3rem}
+.board svg.map{flex:1;min-height:0;width:100%;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.8rem;color:var(--ink-dim);padding:.1rem .4rem .2rem;align-items:center}
+.legend svg{width:34px;height:12px;vertical-align:middle;margin-right:.25rem}
+/* A fixed height, so the map above it never jumps when the reading box changes. */
+.log{grid-area:log;height:12.5rem;display:flex;flex-direction:column;padding:.4rem .7rem;font-size:.9rem}
+.reader{flex:none;border-left:5px solid var(--fam,var(--accent));background:var(--panel-2);border-radius:8px;padding:.35rem .65rem;margin-bottom:.4rem;font-size:.98rem;line-height:1.3;color:var(--heading)}
+.reader .k{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--fam,var(--accent));font-weight:700}
+.reader i{color:var(--ink)}
+.reader .src{color:var(--ink-dim);font-size:.82rem}
+.reader .hint{color:var(--ink-dim)}
+.city-story{margin:0;font-size:.9rem;color:var(--ink)}
+.city-story .src,.seat .src{color:var(--ink-dim);font-size:.8rem}
+.seat .story{font-size:.85rem;color:var(--ink-dim)}
+.log ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.2rem;flex:1;min-height:0;overflow:auto}
+.log li{padding-left:.6rem;border-left:4px solid var(--cc,#334)}
+.log li.event{border-left-color:var(--warn);color:var(--heading);font-weight:600}
+.log li .r{color:var(--ink-dim);font-size:.78rem;margin-right:.35rem}
+.panel{grid-area:panel;overflow:auto;padding:.7rem .9rem;display:flex;flex-direction:column;gap:.6rem;border-top:6px solid var(--cc)}
+.who{display:flex;align-items:baseline;gap:.4rem .8rem;flex-wrap:wrap}
+.who h2{font-size:1.75rem}
+.who .model{color:var(--ink-dim)}
+.who .pop{margin-left:auto;font-size:1.2rem}
+.who .pop b{font-size:2rem}
+.ability{margin:0;font-size:.95rem;color:var(--ink-dim)}
+.top{display:flex;gap:.7rem;flex-wrap:wrap;align-items:stretch}
+.top .grow{flex:1;min-width:16rem}
+.res{display:flex;gap:.7rem;flex-wrap:wrap}
+.res .pool{background:var(--panel-2);border-radius:10px;padding:.3rem .9rem;display:flex;align-items:baseline;gap:.45rem;font-size:1.15rem;font-weight:600}
+.res .pool .n{font-size:2.4rem;font-weight:700;line-height:1}
+.income{font-size:.92rem;background:var(--panel-2);border-radius:8px;padding:.35rem .7rem}
+.income summary{cursor:pointer;font-weight:600}
+.income ul{margin:.3rem 0 .1rem;padding-left:1.1rem}
+.income li .why{color:var(--ink-dim)}
+.income li .hit{color:var(--warn)}
+.grow{border-left:5px solid var(--accent);background:var(--panel-2);border-radius:8px;padding:.45rem .8rem;font-size:1.05rem}
+.grow b{font-size:1.3rem}
+.grow .hint{display:block;font-size:.92rem;color:var(--ink-dim);margin-top:.15rem}
+.grow.warn{border-left-color:var(--warn)}
+.grow.warn .hint{color:var(--warn)}
+.targetbar{border:2px dashed var(--accent);border-radius:10px;padding:.5rem .7rem;display:flex;flex-wrap:wrap;gap:.45rem;align-items:center}
+.targetbar p{margin:0 .4rem 0 0;font-weight:700;color:var(--heading);flex-basis:100%}
+.panel h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-dim);margin-top:.2rem}
+.hand,.tableau{display:flex;flex-wrap:wrap;gap:.5rem}
+.panel .hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.8rem,1fr));align-items:stretch}
+.panel .hand .card{width:auto}
+.card{width:10.4rem;min-height:9.4rem;text-align:left;display:flex;flex-direction:column;gap:.18rem;padding:.4rem .55rem .5rem;border-radius:10px;
+  border:2px solid var(--fam);background:linear-gradient(180deg,color-mix(in srgb,var(--fam) 24%,var(--panel-2)),var(--panel-2) 42%)}
+.card:hover:not(.blocked),.card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card.picked{outline:3px solid #fff;outline-offset:2px}
+.card.blocked{opacity:.6;cursor:not-allowed;border-style:dashed}
+.card.small{width:9rem;min-height:0;cursor:default}
+.card .band{display:flex;align-items:center;gap:.3rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--fam);font-weight:700}
+.card .cost{margin-left:auto;background:var(--trade);color:#062033;font-weight:700;border-radius:999px;min-width:1.45rem;text-align:center;padding:0 .35rem;font-size:.85rem;letter-spacing:0}
+.card .cost.free{background:transparent;color:var(--ink-dim);border:1px solid var(--ink-dim);font-weight:600}
+.card .nm{font-weight:700;color:var(--heading);font-size:1rem;line-height:1.15}
+.card .txt{font-size:.8rem;line-height:1.3}
+.card .case{font-size:.72rem;color:var(--ink-dim);font-style:italic}
+.card .flav{font-size:.72rem;line-height:1.25;color:var(--ink);border-top:1px solid color-mix(in srgb,var(--fam) 45%,transparent);padding-top:.2rem;margin-top:.1rem}
+.card .flav i{color:var(--ink-dim)}
+.card .src{font-size:.72rem;color:var(--ink-dim);margin-top:auto}
+.card .why{font-size:.76rem;color:var(--warn);line-height:1.25}
+.card .use{margin-top:.3rem}
+.fam-basic{--fam:#c9a06a}.fam-host{--fam:#2dd4bf}.fam-paper{--fam:#a78bfa}.fam-state{--fam:#f87171}.fam-steam{--fam:#a8b5c8}.fam-event{--fam:#fb923c}
+.actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:auto;padding:.5rem 0 .1rem;position:sticky;bottom:-.7rem;background:var(--panel);border-top:1px solid var(--rule)}
+.botnote{font-size:1.2rem;color:var(--heading)}
+
+/* map */
+.map text{font-family:inherit}
+.rt{fill:none;stroke-linecap:round}
+.rt.sea{stroke:#38bdf8;stroke-width:5;stroke-dasharray:16 9}
+.rt.river-o{stroke:#3b82f6;stroke-width:10}
+.rt.river-i{stroke:#0b1a36;stroke-width:3.5}
+.rt.canal{stroke:#60a5fa;stroke-width:5}
+.rt.canal-t{stroke:#60a5fa;stroke-width:15;stroke-dasharray:3 15;stroke-linecap:butt}
+.water{fill:none;stroke:#143a66;stroke-width:9;stroke-linecap:round;opacity:.75}
+.rt.road{stroke:#d9a066;stroke-width:6;stroke-dasharray:.1 11}
+.rt.rail-t{stroke:#cbd5e1;stroke-width:13;stroke-dasharray:2.5 8;stroke-linecap:butt}
+.rt.rail{stroke:#cbd5e1;stroke-width:3}
+.rt-hit{fill:none;stroke:transparent;stroke-width:26}
+.tgt-route .rt-hit{stroke:rgba(34,211,238,.25);cursor:pointer}
+.tgt-route:hover .rt-hit{stroke:rgba(34,211,238,.5)}
+.mode-label{font-size:15px;fill:var(--ink-dim);font-weight:600;paint-order:stroke;stroke:#0d1528;stroke-width:4px}
+.city-node .disc{stroke-width:3}
+.city-node .popn{font-weight:700;fill:#fff;paint-order:stroke;stroke:#0d1528;stroke-width:4px}
+.city-node .cname{font-size:21px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#0d1528;stroke-width:5px}
+.city-node .cmodel{font-size:15px;fill:var(--ink-dim);font-weight:500;paint-order:stroke;stroke:#0d1528;stroke-width:4px}
+.city-node .ring{fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:6 5}
+.city-node.tgt{cursor:pointer}
+.city-node.tgt .ring{stroke:var(--accent);stroke-width:4;animation:pulse 1.1s ease-in-out infinite}
+.city-node .hostm text{font-size:11px;font-weight:700;fill:#0a0f1c}
+@keyframes pulse{50%{stroke-opacity:.35}}
+@media (prefers-reduced-motion:reduce){.city-node.tgt .ring{animation:none}}
+
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(3,6,14,.82);display:grid;place-items:center;padding:1rem;z-index:10;overflow:auto}
+.overlay[hidden]{display:none}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:14px;max-width:52rem;width:100%;padding:1.1rem 1.5rem;max-height:calc(100vh - 2rem);overflow:auto}
+.sheet h2{font-size:1.8rem;margin-bottom:.3rem}
+.sheet p,.sheet li{font-size:1.02rem}
+.sheet p{margin:.45rem 0}
+.sheet ol,.sheet ul{padding-left:1.3rem}
+.sheet li{margin:.1rem 0}
+.sheet ol,.sheet ul{margin:.3rem 0}
+.sheet .kicker{text-transform:uppercase;letter-spacing:.1em;color:var(--warn);font-weight:700;font-size:.85rem}
+.sheet .src{color:var(--ink-dim);font-size:.9rem}
+.sheet .honest{color:var(--ink-dim);font-size:.95rem;border-top:1px solid var(--rule);padding-top:.6rem}
+.sheet .btns{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+.event-sheet{border:2px solid var(--warn);text-align:left}
+.event-sheet h2{font-size:2.6rem}
+.hands-grid{display:grid;gap:1rem}
+.hands-grid h3{display:flex;gap:.4rem;align-items:center;margin-bottom:.35rem}
+
+/* end */
+.end{max-width:78rem;margin:0 auto;padding:1.4rem 1rem 3rem}
+.end h1{font-size:2.5rem}
+.end .ask{font-size:1.2rem;max-width:52rem}
+.end-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(26rem,1fr));gap:1rem;margin:1rem 0}
+.end figure{margin:0;padding:.8rem 1rem;background:var(--panel);border:1px solid var(--rule);border-radius:10px}
+.end figcaption{font-weight:700;color:var(--heading);font-size:1.1rem}
+.end figcaption span{display:block;font-weight:400;color:var(--ink-dim);font-size:.9rem}
+.end svg{width:100%;height:auto;display:block}
+.viz text{fill:var(--ink-dim);font-size:13px}
+.viz .lab{fill:var(--ink);font-size:14px;font-weight:600}
+.viz .grid{stroke:rgba(143,160,192,.18);stroke-width:1}
+.viz .axis{stroke:rgba(143,160,192,.45);stroke-width:1}
+.keyrow{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-size:.9rem;margin:.4rem 0}
+.keyrow span{display:inline-flex;align-items:center;gap:.35rem}
+.end .keyrow svg{width:14px;height:14px;display:inline-block}
+.end .legend svg{width:34px;height:12px;display:inline-block}
+.hits ul{margin:.2rem 0 .6rem;padding-left:1.1rem}
+.end table{border-collapse:collapse;font-size:.92rem;margin:.5rem 0}
+.end th,.end td{border-bottom:1px solid var(--rule);padding:.25rem .6rem;text-align:right}
+.end th:first-child,.end td:first-child{text-align:left}
+
+@media (max-width:900px){
+  #game{grid-template-columns:1fr;grid-template-areas:"bar" "board" "panel" "log";height:auto}
+  .board svg.map{height:62vw;flex:none}
+  .log{height:auto}
+  .log ol{overflow:visible}
+  .end-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="overlay" class="overlay" hidden></div>
+<script src="engine.js"></script>
+<script>
+(function () {
+  'use strict';
+  const LH = window.LongHaul;
+  const app = document.getElementById('app');
+  const overlay = document.getElementById('overlay');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // Validated for color-blind separation on the dark surface (dataviz
+  // validator, all pairs: CVD dE 15.9, normal 23.9). Every city also shows
+  // its initial and its name, so identity is never color alone.
+  const COLORS = { barnacle: '#3987e5', chitsbury: '#eda100', handthrow: '#e2e8f0', grazing: '#d55181',
+    lockington: '#199e70', silo: '#d95926', donkeyford: '#9085e9', letterbury: '#e66767' };
+  const SAVE_KEY = 'longhaul.save.v2';
+  const CLASS_SEED = 1130;          // the class table code: chosen by pick_seed.js, see BALANCE.md
+  const BOT_STYLE = 'casual';
+  const TURN_NUDGE = 60, MIN_ROUNDS = 3, MAX_ROUNDS = 12;
+  // The clock allows about four and a half minutes a round: 35 for 8, 20 for 5.
+  const minutesFor = rounds => Math.max(10, Math.round(rounds * 4.4 / 5) * 5);
+  const clampRounds = v => Math.min(MAX_ROUNDS, Math.max(MIN_ROUNDS, parseInt(v, 10) || LH.DEFAULTS.rounds));
+
+  let st = null;
+  const ui = { target: null, shown: {}, turnT0: Date.now(), gameT0: Date.now(), clock: true, botTimer: null, prevR: {},
+    rounds: LH.DEFAULTS.rounds, seedText: String(CLASS_SEED),
+    seats: Object.fromEntries(LH.DEFAULT_TABLE.map((k, i) => [k, !!LH.DEFAULT_BOTS[i]])) };
+
+  const ICON = {
+    hinterland: '<path d="M12 21V9"/><path d="M12 9c-2.5 0-4-2-4-5 2.5 0 4 2 4 5zM12 9c2.5 0 4-2 4-5-2.5 0-4 2-4 5zM12 14c-2.5 0-4-2-4-5 2.5 0 4 2 4 5zM12 14c2.5 0 4-2 4-5-2.5 0-4 2-4 5z"/>',
+    route: '<circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><path d="M7 18c6-1 3-11 10-12"/>',
+    host: '<path d="M3 11l9-7 9 7v9H3z"/><path d="M10 20v-5h4v5"/>',
+    paper: '<path d="M6 3h9l3 3v15H6z"/><path d="M9 10h6M9 14h6M9 18h3"/>',
+    state: '<path d="M3 18l2-11 5 5 2-7 2 7 5-5 2 11z"/>',
+    steam: '<circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    event: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    trade: '<circle cx="12" cy="12" r="8"/><path d="M12 6.5v11M14.5 9.5h-3.5a1.5 1.5 0 000 3h2a1.5 1.5 0 010 3H9.5"/>',
+    pop: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2c3 .2 5.5 2.4 5.5 5.8"/>',
+  };
+  const icon = (k, cls) => `<svg class="ico ${cls || ''}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
+  const FAMNAME = { basic: 'Basic', host: 'Host', paper: 'Paper', state: 'State', steam: 'Steam', event: 'Event' };
+  const GEO = { coast: 'on the coast', river: 'on a river', inland: 'inland' };
+  const MODE = { sea: 'Sea', river: 'River', canal: 'Canal', road: 'Road', rail: 'Rail' };
+  const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+  const cap1 = s => s[0].toUpperCase() + s.slice(1);
+  const color = c => COLORS[c.key] || '#8fa0c0';
+  const initial = c => c.name.replace(/^(Port|Much) /, '')[0];
+
+  // ------------------------------------------------------------ storage --
+  function save() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ st, shown: ui.shown, elapsed: Date.now() - ui.gameT0, clock: ui.clock }));
+    } catch (e) { /* private window or blocked storage: the game still plays */ }
+  }
+  function loadSave() {
+    try {
+      const x = JSON.parse(localStorage.getItem(SAVE_KEY));
+      return x && x.st && x.st.v === 2 ? x : null;
+    } catch (e) { return null; }
+  }
+  function closeOverlay() { overlay.hidden = true; overlay.innerHTML = ''; }
+  function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* nothing to clear */ } }
+
+  // -------------------------------------------------------------- setup --
+  function renderSetup() {
+    stopBot();
+    closeOverlay();
+    const saved = loadSave();
+    const cities = LH.DEFAULT_TABLE.map(k => ({ key: k, ...LH.CITIES[k] }));
+    app.innerHTML = `
+      <main class="setup">
+        <h1>The Long Haul</h1>
+        <p class="lede">${cap1(NUM[cities.length])} cities, one deck, about <span id="lede-min">${minutesFor(ui.rounds)}</span> minutes.</p>
+        <div class="seats">${cities.map(c => `
+          <section class="seat" style="--cc:${COLORS[c.key]}">
+            <h2><span class="initial">${esc(initial(c))}</span>${esc(c.name)}</h2>
+            <div class="model">after ${esc(c.model)}, ${GEO[c.geo]}</div>
+            <div class="ab">${esc(c.abilityText)}</div>
+            ${c.story ? `<div class="story">${esc(c.story)}${c.source ? ` <span class="src">(${esc(c.source)})</span>` : ''}</div>` : ''}
+            <div class="who-plays" role="group" aria-label="Who plays ${esc(c.name)}">
+              <button data-seat="${c.key}" data-who="student" aria-pressed="${ui.seats[c.key] ? 'false' : 'true'}">A student</button>
+              <button data-seat="${c.key}" data-who="bot" aria-pressed="${ui.seats[c.key] ? 'true' : 'false'}">The laptop</button>
+            </div>
+          </section>`).join('')}
+        </div>
+        <div class="row">
+          <label>Rounds <input type="number" id="rounds" value="${ui.rounds}" min="${MIN_ROUNDS}" max="${MAX_ROUNDS}" step="1" style="width:4.5rem"></label>
+          <label>Table code <input type="text" id="seed" value="${esc(ui.seedText)}" inputmode="numeric" autocomplete="off"></label>
+          <label><input type="checkbox" id="clock" ${ui.clock ? 'checked' : ''}> Stop after <span id="clock-min">${minutesFor(ui.rounds)}</span> minutes (the round in progress still finishes)</label>
+        </div>
+        <p class="hint">Every table uses the same code and the same number of rounds (${LH.DEFAULTS.rounds}, unless we say otherwise), so every table gets the same cards in the same order, and the same events in the same rounds. The only thing that differs is what you decide. The laptop runs the two river cities, so there are more places to trade with than there are people at the table. Short a player? Let it run that city too.</p>
+        <div class="go">
+          <button class="btn primary big" id="start">Start a new game</button>
+          ${saved ? `<button class="btn big" id="resume">${saved.st.over ? "Show the last game's results" : `Resume the saved game (round ${saved.st.round}, ${esc(saved.st.cities[saved.st.active].name)} to play)`}</button>` : ''}
+        </div>
+      </main>`;
+    app.querySelectorAll('.who-plays button').forEach(b => b.addEventListener('click', () => {
+      ui.seats[b.dataset.seat] = b.dataset.who === 'bot';
+      ui.clock = document.getElementById('clock').checked;
+      renderSetup();
+    }));
+    // Keep what was typed: a seat button redraws this whole screen.
+    document.getElementById('seed').addEventListener('input', e => { ui.seedText = e.target.value; });
+    document.getElementById('rounds').addEventListener('input', e => {
+      if (e.target.value === '') return;
+      ui.rounds = clampRounds(e.target.value);
+      document.getElementById('clock-min').textContent = minutesFor(ui.rounds);
+      document.getElementById('lede-min').textContent = minutesFor(ui.rounds);
+    });
+    document.getElementById('rounds').addEventListener('change', e => { e.target.value = ui.rounds; });
+    document.getElementById('start').addEventListener('click', () => {
+      if (saved && !confirmLeave()) return;
+      const seed = parseInt(document.getElementById('seed').value, 10) || CLASS_SEED;
+      ui.rounds = clampRounds(document.getElementById('rounds').value);
+      ui.clock = document.getElementById('clock').checked;
+      st = LH.newGame({ seed, config: { rounds: ui.rounds }, bots: LH.DEFAULT_TABLE.map(k => (ui.seats[k] ? BOT_STYLE : null)) });
+      ui.shown = {}; ui.target = null; ui.prevR = {}; ui.gameT0 = Date.now(); ui.turnT0 = Date.now();
+      save();
+      showRules(true);
+    });
+    const r = document.getElementById('resume');
+    if (r) r.addEventListener('click', () => {
+      st = saved.st; ui.shown = saved.shown || {}; ui.prevR = {}; ui.clock = saved.clock !== false;
+      ui.gameT0 = Date.now() - (saved.elapsed || 0); ui.turnT0 = Date.now(); ui.target = null;
+      if (st.over) renderEnd(); else { renderGame(); maybeBot(); }
+    });
+  }
+  function confirmLeave() {
+    return window.confirm('Starting a new game replaces the saved one. Go ahead?');
+  }
+
+  // --------------------------------------------------------------- rules --
+  function rulesHtml() {
+    const c = st ? st.cfg : LH.DEFAULTS;
+    const tradeLine = c.hostRule === 'boost'
+      ? 'Every Route pays 1 Trade. It pays 1 more if your merchants (a <b>Host</b>) live in the city at the other end.'
+      : 'A Route pays you Trade only if your merchants (a <b>Host</b>) live in the city at the other end.';
+    const n = st ? st.cities.length : LH.DEFAULT_TABLE.length;
+    const nb = st ? st.cities.filter(x => x.bot).length : LH.DEFAULT_BOTS.filter(Boolean).length;
+    return `
+      <h2>How to play</h2>
+      <p>You run a city. ${cap1(NUM[n])} of them share this table${nb ? `, and the laptop plays ${NUM[nb]} of those` : ''}. They come from different millennia (on purpose). The question we're asking is whether the same things held all of them back.</p>
+      <p><b>Each turn</b></p>
+      <ol>
+        <li>Your city collects its Food and Trade. The laptop does all the adding up.</li>
+        <li>You draw a card.</li>
+        <li>You can play one Hinterland or Route for free, plus any other cards you can pay for in Trade.</li>
+        <li>When you hit <b>End turn</b>, every ${c.foodPerPop} Food and ${c.tradePerPop} Trade becomes 1 Population.</li>
+        <li>Anything you don't spend is lost, so there's no saving up. Then pass the laptop.</li>
+      </ol>
+      <p>The biggest Population after ${c.rounds} rounds wins.</p>
+      <p><b>Two things to know</b></p>
+      <ul>
+        <li><b>Food is heavy.</b> A sea route carries ${c.modeFood.sea} Food, a river or a canal ${c.modeFood.river}, and a road none at all.</li>
+        <li><b>Trade needs trust.</b> ${tradeLine}</li>
+      </ul>
+      <p>To play a card, click it. If it needs a target, click a city on the map (or pick one from the list that appears).</p>
+      <p>Every card is a real case. Point at a card, or at a city on the map, and its story shows up in the box at the bottom left.</p>
+      <p class="honest">One warning before you get attached to the numbers: the costs and yields are made up so that the game works. The ordering is real (sea beats river beats road), and the magnitudes aren't. We'll sort out which is which afterwards.</p>`;
+  }
+  function showRules(starting) {
+    overlay.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="Rules">${rulesHtml()}
+      <div class="btns"><button class="btn primary big" id="rules-ok">${starting ? "Let's play" : 'Back to the game'}</button></div></div>`;
+    overlay.hidden = false;
+    const ok = document.getElementById('rules-ok');
+    ok.focus();
+    ok.addEventListener('click', () => { closeOverlay(); renderGame(); maybeEvent(); maybeBot(); });
+  }
+
+  // ---------------------------------------------------------------- map --
+  // Coastal cities sit on the shore at the left, inland ones to the right, so
+  // the geography that sets each Route's mode is visible on the board.
+  // The cities sit on a ring, so no Route runs through a third city. The river
+  // cities take the top and bottom of it, on the river that is drawn there.
+  function positions() {
+    const slots = { coast: [[165, 200], [165, 400]], river: [[350, 108], [350, 492]], inland: [[535, 200], [535, 400]] };
+    const used = { coast: 0, river: 0, inland: 0 };
+    return st.cities.map(c => {
+      const list = slots[c.geo], k = used[c.geo]++;
+      return list[k] || [350, 300];
+    });
+  }
+  // A disc's area tracks Population, so a city visibly swells as it grows.
+  // A game longer than 8 rounds grows bigger cities, so the scale eases off
+  // to keep the largest disc about the same size on the map.
+  const radius = pop => 6 + 7 * Math.min(1, Math.sqrt(8 / st.cfg.rounds)) * Math.sqrt(Math.max(0, pop));
+
+  function mapSvg(interactive) {
+    const P = positions();
+    const tgt = interactive && ui.target ? ui.target : null;
+    const out = [];
+    out.push(`<svg class="map" viewBox="0 0 700 600" role="img" aria-label="Map of the ${NUM[st.cities.length]} cities and the Routes between them">`);
+    out.push(`<path d="M0 0H96C128 84 84 180 112 300S92 504 120 600H0Z" fill="#0c2747"/>`);
+    out.push(`<path d="M20 108q14-8 28 0t28 0M14 348q14-8 28 0t28 0M26 528q14-8 28 0t28 0" fill="none" stroke="#1f4f80" stroke-width="2"/>`);
+    out.push(`<text x="24" y="240" class="mode-label" style="font-size:15px">the sea</text>`);
+    if (st.cities.some(c => c.geo === 'river')) {
+      out.push(`<path class="water" d="M430 0C415 40 380 70 350 108C300 180 400 250 352 300C300 356 390 430 350 492C330 530 200 520 116 560"/>`);
+      out.push(`<text x="408" y="34" class="mode-label" style="font-size:15px">the river</text>`);
+    }
+    // Routes: several between one pair fan out as curves.
+    const pairs = {};
+    st.routes.forEach(r => { const k = [Math.min(r.a, r.b), Math.max(r.a, r.b)].join('-'); (pairs[k] = pairs[k] || []).push(r); });
+    for (const k of Object.keys(pairs)) {
+      const list = pairs[k];
+      list.forEach((r, idx) => {
+        const [ax, ay] = P[r.a], [bx, by] = P[r.b];
+        const mx = (ax + bx) / 2, my = (ay + by) / 2, dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+        const off = (idx - (list.length - 1) / 2) * 46;
+        const cx = mx - dy / L * off, cy = my + dx / L * off;
+        const d = `M${ax} ${ay}Q${cx} ${cy} ${bx} ${by}`;
+        const isT = tgt && tgt.kind === 'roadRoute' && tgt.options.includes(r.id);
+        out.push(`<g class="route${isT ? ' tgt-route' : ''}" data-route="${r.id}">`);
+        if (r.mode === 'river') out.push(`<path d="${d}" class="rt river-o"/><path d="${d}" class="rt river-i"/>`);
+        else if (r.mode === 'canal') out.push(`<path d="${d}" class="rt canal-t"/><path d="${d}" class="rt canal"/>`);
+        else if (r.mode === 'rail') out.push(`<path d="${d}" class="rt rail-t"/><path d="${d}" class="rt rail"/>`);
+        else out.push(`<path d="${d}" class="rt ${r.mode}"/>`);
+        out.push(`<path d="${d}" class="rt-hit"><title>${MODE[r.mode]} Route, ${esc(st.cities[r.a].name)} to ${esc(st.cities[r.b].name)}</title></path>`);
+        const lx = 0.25 * ax + 0.5 * cx + 0.25 * bx, ly = 0.25 * ay + 0.5 * cy + 0.25 * by;
+        if (st.routes.length <= 8 || r.mode === 'canal' || r.mode === 'rail')
+          out.push(`<text x="${lx}" y="${ly - 8}" text-anchor="middle" class="mode-label">${MODE[r.mode].toLowerCase()}</text>`);
+        out.push('</g>');
+      });
+    }
+    // Cities, with Host markers around each: whose merchants live there.
+    st.cities.forEach((c, i) => {
+      const [x, y] = P[i], R = radius(c.pop), col = color(c);
+      // Grow (or shrink) from the size it was drawn at last time.
+      const from = interactive && ui.prevR[c.key] !== undefined && Math.abs(ui.prevR[c.key] - R) > 0.05 ? ui.prevR[c.key] : null;
+      const grow = (a, b) => (from === null || reduceMotion ? '' : `<animate attributeName="r" from="${a}" to="${b}" dur="0.7s" fill="freeze" calcMode="spline" keySplines=".2 .8 .2 1" keyTimes="0;1"/>`);
+      if (interactive) ui.prevR[c.key] = R;
+      const isT = tgt && tgt.kind === 'city' && tgt.options.includes(i);
+      const active = interactive && !st.over && i === st.active;
+      out.push(`<g class="city-node${isT ? ' tgt' : ''}" data-city="${i}" ${isT ? 'tabindex="0" role="button"' : ''} aria-label="${esc(c.name)}, Population ${c.pop}">`);
+      if (active || isT) out.push(`<circle class="ring" cx="${x}" cy="${y}" r="${R + 8}">${grow(from + 8, R + 8)}</circle>`);
+      out.push(`<circle cx="${x}" cy="${y}" r="${R}" fill="#0d1528">${grow(from, R)}</circle>`);
+      out.push(`<circle class="disc" cx="${x}" cy="${y}" r="${R}" fill="${col}" fill-opacity=".3" stroke="${col}">${grow(from, R)}</circle>`);
+      const fs = Math.max(15, Math.min(26, R * 0.95));
+      out.push(`<text class="popn" x="${x}" y="${y + fs * 0.35}" text-anchor="middle" style="font-size:${fs.toFixed(1)}px">${c.pop}</text>`);
+      // Labels sit on the side away from the map's middle, so Routes between
+      // the top and bottom rows never run through a city's name.
+      const top = y < 300;
+      const ny = top ? y - R - 34 : y + R + 26;
+      out.push(`<text class="cname" x="${x}" y="${ny}" text-anchor="middle">${esc(c.name)}</text>`);
+      out.push(`<text class="cmodel" x="${x}" y="${ny + 19}" text-anchor="middle">after ${esc(c.model)}${permSummary(c)}</text>`);
+      // Host badges go on the outer flank: seaward for a port, eastward inland.
+      const hs = st.hosts.filter(h => h.city === i);
+      const flank = x < 300 ? Math.PI : 0;
+      const step = Math.max(0.6, 24 / (R + 3));   // badges 22 px wide never overlap, however small the disc
+      hs.forEach((h, k) => {
+        const ang = flank + (flank ? -1 : 1) * step * (k - (hs.length - 1) / 2);
+        const hx = x + (R + 3) * Math.cos(ang), hy = y + (R + 3) * Math.sin(ang);
+        const o = st.cities[h.owner];
+        out.push(`<g class="hostm"><circle cx="${hx}" cy="${hy}" r="11" fill="${color(o)}" stroke="#0d1528" stroke-width="2"/><text x="${hx}" y="${hy + 4}" text-anchor="middle">${esc(initial(o))}</text><title>${esc(o.name)}'s merchants live in ${esc(c.name)}</title></g>`);
+      });
+      out.push(`<title>${esc(c.name)}: Population ${c.pop}</title></g>`);
+    });
+    out.push('</svg>');
+    return out.join('');
+  }
+  function permSummary(c) {
+    const n = f => c.tableau.filter(u => LH.CARDS[st.cards[u].type].family === f).length;
+    const bits = [];
+    if (n('paper')) bits.push(`Paper ${n('paper')}`);
+    if (n('state')) bits.push(`State ${n('state')}`);
+    if (n('steam')) bits.push(`Steam ${n('steam')}`);
+    return bits.length ? ' · ' + bits.join(' · ') : '';
+  }
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const legendHtml = () => `<div class="legend">
+    <span><svg viewBox="0 0 34 12"><path d="M2 6H32" class="rt sea" style="stroke-width:4;stroke-dasharray:9 5"/></svg>sea (2 Food)</span>
+    <span><svg viewBox="0 0 34 12"><path d="M2 6H32" class="rt river-o" style="stroke-width:8"/><path d="M2 6H32" class="rt river-i" style="stroke-width:3"/></svg>river (1)</span>
+    <span><svg viewBox="0 0 34 12"><path d="M2 6H32" class="rt canal-t" style="stroke-width:10;stroke-dasharray:2 8"/><path d="M2 6H32" class="rt canal" style="stroke-width:3.5"/></svg>canal (1)</span>
+    <span><svg viewBox="0 0 34 12"><path d="M3 6H32" class="rt road" style="stroke-width:5;stroke-dasharray:.1 8"/></svg>road (none)</span>
+    <span><svg viewBox="0 0 34 12"><path d="M2 6H32" class="rt rail-t" style="stroke-width:10;stroke-dasharray:2 6"/><path d="M2 6H32" class="rt rail"/></svg>rail</span>
+    <span>letter badge: whose merchants (Host) live there</span>
+    <span>a bigger circle is a bigger city</span></div>`;
+
+  // ------------------------------------------------------------- panel --
+  function incomeLine(l, me) {
+    const amt = (f, t) => [f ? `+${f} Food` : '', t > 0 ? `+${t} Trade` : t < 0 ? `${String(t).replace('-', '−')} Trade` : ''].filter(Boolean).join(', ') || 'nothing';
+    const d = LH.CARDS[l.what];
+    switch (l.what) {
+      case 'city': return `Your own fields and market: ${amt(l.food, l.trade)}${l.note === 'crown' ? ' <span class="hit">(the Crown blocked the market)</span>' : ''}`;
+      case 'hinterlands': return `${l.n} Hinterland${l.n > 1 ? 's' : ''}: ${amt(l.food, 0)}`;
+      case 'route': {
+        const o = st.cities[l.to];
+        const why = { sea: 'sea freight is cheap', river: 'a river carries some bulk', canal: 'a canal carries some bulk', road: 'a road carries no bulk food', rail: 'steam, at last' }[l.mode];
+        const host = l.host ? `, and your merchants live there` : '';
+        const hits = (l.notes || []).map(n => ({ camels: 'the conquest closed it this round', closure: 'the canal closure shut it this round', bandits: 'bandits took its Trade', crown: 'the Crown blocked its Trade' }[n])).filter(Boolean);
+        return `${MODE[l.mode]} Route to ${esc(o.name)}: ${amt(l.food, l.trade)} <span class="why">(${why}${host})</span>${hits.length ? ` <span class="hit">${hits.join('; ')}</span>` : ''}`;
+      }
+      case 'paper': return `Paper: ${amt(0, l.trade)} <span class="why">(${l.n > 1 ? l.n + ' Papers, ' : ''}${l.hostCities} ${l.hostCities === 1 ? 'city' : 'cities'} where your merchants can cash it)</span>`;
+      case 'tribute': return `Tribute: ${amt(0, l.trade)}`;
+      case 'dredging': return `Dredging the harbor: ${amt(0, l.trade)}`;
+      case 'bourseFees': return `Fees from ${l.n} foreign merchant house${l.n > 1 ? 's' : ''}: ${amt(0, l.trade)}`;
+      case 'seaPort': return `Your harbor: ${amt(0, l.trade)}`;
+      default: return `${esc(d ? d.name : l.what)}: ${amt(l.food, l.trade)}${d && d.family === 'state' ? ' <span class="why">(the state)</span>' : ''}`;
+    }
+  }
+
+  function costBadge(i, type) {
+    const d = LH.CARDS[type];
+    if (d.basic) return '<span class="cost free">free</span>';
+    let lo, hi;
+    if (d.target === 'city') {
+      const cs = st.cities.filter(c => c.i !== i).map(c => LH.costOf(st, i, type, c.i));
+      lo = Math.min(...cs); hi = Math.max(...cs);
+    } else lo = hi = LH.costOf(st, i, type, null);
+    return `<span class="cost" title="Cost in Trade">${lo === hi ? lo : lo + ' or ' + hi}</span>`;
+  }
+
+  // What the thing was (a definition), then one line of its history.
+  // The face of a card in hand shows the definition alone, or the story where
+  // there is no definition: with both, a card ran to 320 px and half the hand
+  // fell below the fold. The reading box by the log carries the rest.
+  const flavorText = d => `${d.def ? `<i>${esc(d.def)}</i>` : ''}${d.def && d.story ? ' ' : ''}${d.story ? esc(d.story) : ''}`;
+  const flavorHtml = (d, full) => {
+    if (!d.def && !d.story) return '';
+    // With no definition, the face takes the story's first sentence.
+    const first = s => (s.match(/^.*?[.!?](?=\s|$)/) || [s])[0];
+    return `<span class="flav">${full ? flavorText(d) : d.def ? `<i>${esc(d.def)}</i>` : esc(first(d.story))}</span>`;
+  };
+
+  function cardHtml(uid, type, o) {
+    const d = LH.CARDS[type];
+    const fam = d.family === 'basic' ? type : d.family;
+    return `<${o.static ? 'div' : 'button'} class="card fam-${d.family}${o.blocked ? ' blocked' : ''}${o.small ? ' small' : ''}${o.picked ? ' picked' : ''}" data-type="${type}"${uid && !o.static ? ` data-uid="${uid}"` : ''}${o.blocked ? ' aria-disabled="true"' : ''}>
+      <span class="band">${icon(fam)}${FAMNAME[d.family]}${o.cost || ''}</span>
+      <span class="nm">${esc(d.name)}</span>
+      ${d.where ? `<span class="case">${esc(d.where)}</span>` : ''}
+      <span class="txt">${esc(LH.cardText(type, st.cfg))}</span>
+      ${flavorHtml(d, o.full)}
+      ${d.source ? `<span class="src">${esc(d.source)}</span>` : ''}
+      ${o.why ? `<span class="why">${esc(o.why)}</span>` : ''}
+      ${o.extra || ''}
+    </${o.static ? 'div' : 'button'}>`;
+  }
+
+  function growthHtml(me) {
+    const gp = LH.growthPreview(st), c = st.cfg;
+    let hint, warn = false;
+    if (gp.wasteFood >= c.foodPerPop) { hint = `Trade is what's holding you back: ${gp.wasteFood} Food will go to waste. More Food won't help until you find more Trade.`; warn = true; }
+    else if (gp.wasteTrade >= c.tradePerPop) { hint = `Food is what's holding you back: ${gp.wasteTrade} Trade will go to waste unless you spend it on a card.`; warn = true; }
+    else if (gp.wasteFood) hint = `${gp.wasteFood} Food left over: growth takes Food in ${c.foodPerPop}s.`;
+    else hint = 'Nothing goes to waste. Nice.';
+    return `<div class="grow${warn ? ' warn' : ''}">End turn grows ${esc(me.name)} by <b>${gp.grow}</b>${gp.grow ? ` (${gp.food} Food and ${gp.trade} Trade)` : ''}${gp.elevator ? ', after the Grain elevator turns 2 Food into 1 Trade' : ''}.
+      <span class="hint">${hint}</span></div>`;
+  }
+
+  function panelHtml() {
+    const i = st.active, me = st.cities[i];
+    const inc = me.lastIncome;
+    const parts = [];
+    parts.push(`<div class="who"><span class="initial" style="--cc:${color(me)}">${esc(initial(me))}</span><h2>${esc(me.name)}</h2>
+      <span class="model">after ${esc(me.model)}, ${GEO[me.geo]}</span>
+      <span class="pop">${icon('pop')} Population <b>${me.pop}</b></span></div>`);
+    parts.push(`<p class="ability">${esc(LH.CITIES[me.key].abilityText)}</p>`);
+    if (me.bot) {
+      const cdef = LH.CITIES[me.key];
+      if (cdef.story) parts.push(`<p class="city-story">${esc(cdef.story)}${cdef.source ? ` <span class="src">(${esc(cdef.source)})</span>` : ''}</p>`);
+      parts.push(`<p class="botnote">The laptop is playing ${esc(me.name)}. Watch the map and the log on the left.</p>`);
+      return parts.join('');
+    }
+    parts.push(`<div class="top"><div class="res">
+      <div class="pool food">${icon('hinterland')}<span class="n">${me.food}</span> Food</div>
+      <div class="pool trade">${icon('trade')}<span class="n">${me.trade}</span> Trade</div></div>${growthHtml(me)}</div>`);
+    if (ui.target) {
+      const t = ui.target, type = st.cards[t.uid].type;
+      const label = t.kind === 'city'
+        ? (type === 'route' ? 'Pick a city to open your Route to.' : LH.CARDS[type].family === 'host' ? 'Pick the city your merchants will live in.' : `Pick the city to hit with ${LH.CARDS[type].name}.`)
+        : 'Pick one of your Road Routes to upgrade.';
+      const btn = o => {
+        if (t.kind === 'city') {
+          const c = st.cities[o], cost = LH.costOf(st, i, type, o);
+          const mode = type === 'route' ? ` (${MODE[LH.geoMode(st, i, o)].toLowerCase()})` : '';
+          return `<button class="btn" data-pick="${o}">${esc(c.name)}${mode}${LH.CARDS[type].basic ? '' : `, ${cost} Trade`}</button>`;
+        }
+        const r = st.routes.find(x => x.id === o);
+        return `<button class="btn" data-pick="${o}">Road to ${esc(st.cities[r.a === i ? r.b : r.a].name)}</button>`;
+      };
+      parts.push(`<div class="targetbar"><p>${label}</p>${t.options.map(btn).join('')}<button class="btn ghost" data-act="cancel">Cancel</button></div>`);
+    }
+    parts.push(`<h3>Your hand</h3><div class="hand">${me.hand.map(uid => {
+      const type = st.cards[uid].type;
+      const why = LH.whyNot(st, uid);
+      return cardHtml(uid, type, { blocked: !!why, why, cost: costBadge(i, type), picked: ui.target && ui.target.uid === uid });
+    }).join('') || '<p class="dim">No cards in hand.</p>'}</div>`);
+    if (me.tableau.length) parts.push(`<h3>In play</h3><div class="tableau">${me.tableau.map(uid => {
+      const type = st.cards[uid].type;
+      const extra = type === 'elevator'
+        ? `<span class="use"><button class="btn" data-act="elevate" ${LH.canElevate(st) ? '' : 'disabled'}>Use: ${st.cfg.elevatorIn} Food into ${st.cfg.elevatorOut} Trade</button></span>` : '';
+      return cardHtml(uid, type, { small: true, static: true, extra });   // never a button: it may hold one
+    }).join('')}</div>`);
+    if (inc) parts.push(`<details class="income" open><summary>Where this turn's ${inc.food} Food and ${inc.trade} Trade came from</summary>
+      <ul>${inc.lines.filter(l => l.what !== 'hinterlands' || l.n).map(l => `<li>${incomeLine(l, me)}</li>`).join('')}</ul></details>`);
+    parts.push(`<div class="actions"><button class="btn primary big" data-act="end">End turn</button>
+      <button class="btn ghost" data-act="hands">Look at every city</button></div>`);
+    return parts.join('');
+  }
+
+  function barHtml() {
+    const me = st.cities[st.active];
+    const chips = [];
+    if (st.roundEffect) chips.push(`<span class="chip hot">This round: ${esc(LH.EVENTS[st.roundEffect].name)}</span>`);
+    if (st.box) chips.push('<span class="chip">The box has arrived</span>');
+    if (st.silted) chips.push('<span class="chip">Harbors silted</span>');
+    if (st.bourse) chips.push('<span class="chip">Hosts cost nothing</span>');
+    if (st.dynastyFallen) chips.push('<span class="chip">The dynasty has fallen</span>');
+    if (st.stopAfter) chips.push('<span class="chip hot">Last round: time is up</span>');
+    return `<span class="title">The Long Haul</span>
+      <span class="round">Round ${st.round} of ${st.stopAfter || st.cfg.rounds}</span>
+      <span class="chips">${chips.join('')}</span>
+      <span class="spacer"></span>
+      <span class="turn"><span class="initial" style="--cc:${color(me)}">${esc(initial(me))}</span>${esc(me.name)}'s turn</span>
+      <span class="timer" id="timer"></span>
+      <button class="btn ghost" data-act="rules">Rules</button>
+      <button class="btn ghost" data-act="menu">New game</button>`;
+  }
+
+  // The reading box: the full story of whatever is being pointed at (a card,
+  // or a city on the map), in type a table can read. With nothing pointed at,
+  // it shows the last card played, so the laptop's plays get read too.
+  function readerHtml(sel) {
+    const src = s => (s ? ` <span class="src">(${esc(s)})</span>` : '');
+    const cardBox = (d, lead) => `<div class="reader fam-${d.family}"><span class="k">${lead}${esc(d.name)}${d.where ? `, ${esc(d.where)}` : ''}</span>${flavorText(d)}${src(d.source)}</div>`;
+    if (sel && sel.card && LH.CARDS[sel.card]) return cardBox(LH.CARDS[sel.card], '');
+    if (sel && sel.city !== undefined && st.cities[sel.city]) {
+      const c = st.cities[sel.city], d = LH.CITIES[c.key];
+      return `<div class="reader" style="--fam:${color(c)}"><span class="k">${esc(c.name)}, after ${esc(c.model)}${c.bot ? ' (the laptop)' : ''}</span>${esc(d.story || d.abilityText)}${src(d.source)}</div>`;
+    }
+    const e = st.log.slice().reverse().find(x => x.card && x.r === st.round);
+    if (e) return cardBox(LH.CARDS[e.card], `${esc(st.cities[e.c].name)} just played: `);
+    return '<div class="reader"><span class="k">The small print</span><span class="hint">Point at a card, or at a city on the map, to read its story here.</span></div>';
+  }
+  const pointed = t => (t && t.closest ? t.closest('.card[data-type], .city-node[data-city]') : null);
+  function point(e) {
+    const el = document.getElementById('reader'), hit = pointed(e.target);
+    if (!el || !hit || !st) return;
+    el.innerHTML = readerHtml(hit.dataset.type ? { card: hit.dataset.type } : { city: +hit.dataset.city });
+  }
+  function unpoint(e) {
+    const el = document.getElementById('reader'), hit = pointed(e.target);
+    if (!el || !hit || !st) return;
+    if (e.relatedTarget && hit.contains(e.relatedTarget)) return;
+    el.innerHTML = readerHtml(null);
+  }
+
+  function logHtml() {
+    const items = st.log.slice(-40).reverse().filter(e => e.k !== 'setup');
+    return `<div id="reader">${readerHtml(null)}</div><ol>${items.map(e => {
+      const c = e.c === null ? null : st.cities[e.c];
+      return `<li class="${e.k === 'event' ? 'event' : ''}" style="${c ? `--cc:${color(c)}` : ''}"><span class="r">R${e.r}</span>${esc(e.t)}</li>`;
+    }).join('')}</ol>`;
+  }
+
+  function renderGame() {
+    if (st.over) { renderEnd(); return; }
+    const me = st.cities[st.active];
+    app.innerHTML = `<div id="game">
+      <header class="bar box">${barHtml()}</header>
+      <section class="board box" aria-label="The map">${mapSvg(true)}${legendHtml()}</section>
+      <section class="log box" aria-label="What happened" aria-live="polite">${logHtml()}</section>
+      <section class="panel box" style="--cc:${color(me)}" aria-label="${esc(me.name)}'s turn">${panelHtml()}</section>
+    </div>`;
+    tick();
+  }
+
+  // ------------------------------------------------------------ actions --
+  app.addEventListener('click', e => {
+    if (!st || st.over) return;
+    const me = st.cities[st.active];
+    const card = e.target.closest('.card[data-uid]');
+    const act = e.target.closest('[data-act]');
+    const pick = e.target.closest('[data-pick]');
+    const node = e.target.closest('.city-node.tgt');
+    const route = e.target.closest('.route.tgt-route');
+    if (act) {
+      const a = act.dataset.act;
+      if (a === 'rules') return showRules(false);
+      if (a === 'menu') { if (window.confirm('Leave this game and go back to the start screen? It stays saved, and you can resume it.')) renderSetup(); return; }
+      if (me.bot) return;
+      if (a === 'cancel') { ui.target = null; return renderGame(); }
+      if (a === 'elevate') { LH.useElevator(st); return after(); }
+      if (a === 'hands') return showHands();
+      if (a === 'end') return tryEnd();
+      return;
+    }
+    if (me.bot) return;
+    if (pick && ui.target) {
+      const v = ui.target.kind === 'city' ? +pick.dataset.pick : pick.dataset.pick;
+      return playOn(v);
+    }
+    if (node && ui.target && ui.target.kind === 'city') return playOn(+node.dataset.city);
+    if (route && ui.target && ui.target.kind === 'roadRoute') return playOn(route.dataset.route);
+    if (card) {
+      const uid = card.dataset.uid;
+      if (card.classList.contains('blocked')) return;
+      const def = LH.CARDS[st.cards[uid].type];
+      const opts = LH.targets(st, uid);
+      if (def.target === 'none') { LH.play(st, uid, null); ui.target = null; return after(); }
+      ui.target = { uid, kind: def.target, options: opts };
+      return renderGame();
+    }
+  });
+  app.addEventListener('mouseover', point);
+  app.addEventListener('focusin', point);
+  app.addEventListener('mouseout', unpoint);
+  app.addEventListener('focusout', unpoint);
+  app.addEventListener('keydown', e => {
+    const node = e.target.closest && e.target.closest('.city-node.tgt');
+    if (node && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); playOn(+node.dataset.city); }
+  });
+
+  function playOn(target) {
+    const t = ui.target;
+    ui.target = null;
+    const r = LH.play(st, t.uid, target);
+    if (!r.ok) window.alert(r.why);
+    after();
+  }
+
+  function after() { save(); renderGame(); }
+
+  function tryEnd() {
+    const me = st.cities[st.active];
+    const warns = [];
+    const playable = u => LH.targets(st, u).length > 0;
+    if (!me.basicPlayed && me.hand.some(u => LH.CARDS[st.cards[u].type].basic && playable(u)))
+      warns.push("You haven't played your free Hinterland or Route yet.");
+    const gp = LH.growthPreview(st);
+    const cheap = me.hand.filter(u => {
+      const type = st.cards[u].type;
+      if (LH.CARDS[type].basic || !playable(u)) return false;
+      const ts = LH.targets(st, u);
+      return Math.min(...ts.map(t => LH.costOf(st, st.active, type, t))) <= gp.wasteTrade;
+    });
+    if (gp.wasteTrade >= 1 && cheap.length)
+      warns.push(`${gp.wasteTrade} Trade will go to waste, and you could still play ${cheap.slice(0, 2).map(u => LH.CARDS[st.cards[u].type].name).join(' or ')} without growing any less.`);
+    if (!warns.length) return doEnd();
+    overlay.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="Before you end your turn">
+      <h2>Before you pass the laptop</h2>${warns.map(w => `<p>${esc(w)}</p>`).join('')}
+      <div class="btns"><button class="btn" id="goback">Go back</button><button class="btn primary" id="endanyway">End turn anyway</button></div></div>`;
+    overlay.hidden = false;
+    document.getElementById('goback').focus();
+    document.getElementById('goback').addEventListener('click', () => { closeOverlay(); });
+    document.getElementById('endanyway').addEventListener('click', () => { closeOverlay(); doEnd(); });
+  }
+
+  function doEnd() {
+    ui.target = null;
+    LH.endTurn(st);
+    afterTurn();
+  }
+  function afterTurn() {
+    ui.turnT0 = Date.now();
+    if (!st.over && ui.clock && !st.stopAfter && Date.now() - ui.gameT0 >= minutesFor(st.cfg.rounds) * 60000) LH.stopAfterThisRound(st);
+    save();
+    if (st.over) return renderEnd();
+    renderGame();
+    if (!maybeEvent()) maybeBot();
+  }
+
+  function maybeEvent() {
+    if (!st || st.over || !st.lastEvent || st.lastEvent.round !== st.round || ui.shown[st.round]) return false;
+    ui.shown[st.round] = true; save();
+    const ev = LH.EVENTS[st.lastEvent.key];
+    const losses = st.log.filter(e => e.r === st.round && e.k === 'event' && e.c !== null).map(e => e.t);
+    overlay.innerHTML = `<div class="sheet event-sheet" role="dialog" aria-modal="true" aria-label="World event">
+      <div class="kicker">Round ${st.round} begins</div><h2>${esc(ev.name)}</h2><p>${esc(ev.text)}</p>${ev.story ? `<p class="dim">${esc(ev.story)}</p>` : ''}
+      ${losses.length ? `<ul>${losses.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+      ${ev.source ? `<p class="src">${esc(ev.source)}</p>` : ''}
+      <div class="btns"><button class="btn primary big" id="ev-ok">On we go</button></div></div>`;
+    overlay.hidden = false;
+    const ok = document.getElementById('ev-ok');
+    ok.focus();
+    ok.addEventListener('click', () => { closeOverlay(); renderGame(); maybeBot(); });
+    return true;
+  }
+
+  function stopBot() { if (ui.botTimer) { clearTimeout(ui.botTimer); ui.botTimer = null; } }
+  function maybeBot() {
+    stopBot();
+    if (!st || st.over || !overlay.hidden) return;
+    if (!st.cities[st.active].bot) return;
+    ui.botTimer = setTimeout(() => {
+      ui.botTimer = null;
+      if (!st || st.over || !overlay.hidden || !st.cities[st.active].bot) return;
+      LH.botTurn(st, st.cities[st.active].bot);
+      afterTurn();
+    }, 1400);
+  }
+
+  function showHands() {
+    overlay.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="Every city" style="max-width:70rem">
+      <h2>Every city</h2><div class="hands-grid">${st.cities.map(c => `
+        <section><h3><span class="initial" style="--cc:${color(c)}">${esc(initial(c))}</span>${esc(c.name)}: Population ${c.pop}, ${c.hinterlands} Hinterland${c.hinterlands === 1 ? '' : 's'}</h3>
+        <div class="hand">${c.hand.map(u => cardHtml(u, st.cards[u].type, { small: true, static: true, full: true })).join('') || '<span class="dim">No cards in hand.</span>'}
+        ${c.tableau.map(u => cardHtml(u, st.cards[u].type, { small: true, static: true, full: true, extra: '<span class="why">in play</span>' })).join('')}</div></section>`).join('')}
+      </div><div class="btns"><button class="btn primary" id="hands-ok">Back to the game</button></div></div>`;
+    overlay.hidden = false;
+    document.getElementById('hands-ok').focus({ preventScroll: true });   // open at the top, not at the button
+    document.getElementById('hands-ok').addEventListener('click', () => { closeOverlay(); });
+  }
+
+  // -------------------------------------------------------------- clock --
+  function fmt(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+  function tick() {
+    const el = document.getElementById('timer');
+    if (!el || !st || st.over) return;
+    const turn = Date.now() - ui.turnT0, game = Date.now() - ui.gameT0;
+    el.textContent = `turn ${fmt(turn)} · game ${Math.floor(game / 60000)} min`;
+    el.classList.toggle('slow', turn > TURN_NUDGE * 1000);
+    el.title = turn > TURN_NUDGE * 1000 ? 'Past a minute: time to decide and pass the laptop.' : '';
+  }
+  setInterval(tick, 1000);
+
+  // ---------------------------------------------------------------- end --
+  function renderEnd() {
+    stopBot();
+    closeOverlay();
+    const w = st.results.winners.map(i => st.cities[i]);
+    const best = w[0].pop;
+    // If the laptop's city came out on top, say which student city did best too.
+    const humans = st.cities.filter(c => !c.bot);
+    const hBest = humans.length ? Math.max(...humans.map(c => c.pop)) : null;
+    const hTop = humans.filter(c => c.pop === hBest);
+    const also = w.every(c => c.bot) && hTop.length
+      ? `<p class="ask">That one was the laptop's. The biggest student city: <b>${hTop.map(c => esc(c.name)).join(' and ')}</b>, with Population ${hBest}.</p>` : '';
+    app.innerHTML = `<main class="end">
+      <h1>${w.map(c => esc(c.name)).join(' and ')} ${w.length > 1 ? 'tie for the biggest city' : 'is the biggest city'}, with Population ${best}</h1>${also}
+      <p class="ask">Every table had the same cards and the same events in the same rounds. Did the same city win everywhere? And when your city stopped growing, was it Food or Trade that stopped it?</p>
+      <div class="end-grid">
+        <figure><figcaption>Population by round<span>Each city's Population at the end of its turn.</span></figcaption>${keyRow()}${popChart()}</figure>
+        <figure><figcaption>Where each city's Food came from<span>Its own countryside, its Routes, or the state, over the whole game.</span></figcaption>${foodKey()}${foodChart()}</figure>
+        <figure><figcaption>The network at the end</figcaption>${mapSvg(false)}${legendHtml()}</figure>
+        <figure class="hits"><figcaption>What hit each city</figcaption>${hitsHtml()}</figure>
+      </div>
+      <details><summary>The numbers as a table</summary>${tableHtml()}</details>
+      <p class="dim">The costs and yields were invented so the game would work; the ordering of sea, river and canal, and road was not. Keep that in mind before you read too much into anyone's final score.</p>
+      <p><button class="btn primary big" id="again">Back to the start screen</button></p>
+    </main>`;
+    document.getElementById('again').addEventListener('click', () => { clearSave(); st = null; renderSetup(); });
+  }
+
+  const keyRow = () => `<div class="keyrow">${st.cities.map(c => `<span><span class="initial" style="--cc:${color(c)}">${esc(initial(c))}</span>${esc(c.name)}</span>`).join('')}</div>`;
+
+  function popChart() {
+    const R = Math.max(1, st.cities[0].stats.popByRound.filter(v => v !== undefined && v !== null).length);
+    const series = st.cities.map(c => [st.cfg.startPop].concat(c.stats.popByRound.slice(0, R)));
+    const W = 560, H = 290, m = { l: 36, r: 150, t: 12, b: 32 };
+    const top = Math.max(4, Math.ceil(Math.max(...series.flat()) / 4) * 4);
+    const x = k => m.l + k * (W - m.l - m.r) / R, y = v => H - m.b - v * (H - m.t - m.b) / top;
+    const o = [`<svg class="viz" viewBox="0 0 ${W} ${H}" role="img" aria-label="Line chart of each city's Population by round">`];
+    for (let v = 0; v <= top; v += top / 4) o.push(`<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`);
+    for (let k = 0; k <= R; k++) o.push(`<text x="${x(k)}" y="${H - 10}" text-anchor="middle">${k === 0 ? 'start' : 'R' + k}</text>`);
+    series.forEach((s, i) => {
+      const c = st.cities[i], col = color(c);
+      o.push(`<path d="${s.map((v, k) => (k ? 'L' : 'M') + x(k) + ' ' + y(v)).join('')}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>`);
+      s.forEach((v, k) => o.push(`<circle cx="${x(k)}" cy="${y(v)}" r="5" fill="${col}" stroke="#0d1528" stroke-width="2"><title>${esc(c.name)}, ${k === 0 ? 'start' : 'round ' + k}: ${v}</title></circle>`));
+    });
+    // Direct labels at the line ends, nudged apart so they never collide.
+    const ends = series.map((s, i) => ({ i, y: y(s[s.length - 1]), v: s[s.length - 1] })).sort((a, b) => a.y - b.y);
+    for (let k = 1; k < ends.length; k++) if (ends[k].y - ends[k - 1].y < 17) ends[k].y = ends[k - 1].y + 17;
+    ends.forEach(e => {
+      const c = st.cities[e.i];
+      o.push(`<circle cx="${x(R) + 14}" cy="${e.y - 4}" r="5" fill="${color(c)}"/><text class="lab" x="${x(R) + 24}" y="${e.y + 1}">${esc(c.name)} ${e.v}</text>`);
+    });
+    o.push('</svg>');
+    return o.join('');
+  }
+
+  const FOOD_SRC = [
+    { k: 'own', label: 'its own countryside', fill: '#8fa0c0' },
+    { k: 'routes', label: 'its Routes', fill: '#22d3ee' },
+    { k: 'state', label: 'the state', fill: 'url(#hatch)' },
+  ];
+  const foodKey = () => `<div class="keyrow">${FOOD_SRC.map(s => `<span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><defs>${hatchDef()}</defs><rect width="14" height="14" rx="3" fill="${s.fill}"/></svg>${s.label}</span>`).join('')}</div>`;
+  const hatchDef = () => '<pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#7a5ea8"/><rect width="2.2" height="6" fill="#e9ddff"/></pattern>';
+
+  function foodChart() {
+    const W = 560, rowH = 30, gap = 16, m = { l: 118, r: 64, t: 6 };
+    const H = m.t + st.cities.length * (rowH + gap);
+    const o = [`<svg class="viz" viewBox="0 0 ${W} ${H}" role="img" aria-label="Stacked bars: where each city's Food came from"><defs>${hatchDef()}</defs>`];
+    st.cities.forEach((c, i) => {
+      const s = c.stats, tot = s.own + s.routes + s.state || 1;
+      const y0 = m.t + i * (rowH + gap);
+      o.push(`<text class="lab" x="${m.l - 10}" y="${y0 + rowH / 2 + 5}" text-anchor="end">${esc(c.name)}</text>`);
+      let x0 = m.l;
+      const span = W - m.l - m.r;
+      FOOD_SRC.forEach(src => {
+        const v = s[src.k], w = span * v / tot;
+        if (w <= 0) return;
+        const pct = Math.round(100 * v / tot);
+        o.push(`<rect x="${x0}" y="${y0}" width="${Math.max(0, w - 2)}" height="${rowH}" rx="3" fill="${src.fill}"><title>${esc(c.name)}: ${v} Food from ${src.label} (${pct}%)</title></rect>`);
+        if (w > 42) o.push(`<text x="${x0 + w / 2 - 1}" y="${y0 + rowH / 2 + 5}" text-anchor="middle" style="fill:#0a0f1c;font-weight:700;paint-order:stroke;stroke:${src.k === 'state' ? '#e9ddff' : 'none'};stroke-width:3px">${pct}%</text>`);
+        x0 += w;
+      });
+      o.push(`<text x="${W - m.r + 8}" y="${y0 + rowH / 2 + 5}">${s.own + s.routes + s.state} Food</text>`);
+    });
+    o.push('</svg>');
+    return o.join('');
+  }
+
+  function hitsHtml() {
+    const name = t => (LH.CARDS[t] ? LH.CARDS[t].name : t);
+    const what = { conquest: 'the conquest', canalCloses: 'the canal closure', bandits: 'Bandits', banditsAll: 'bandits on the roads', crown: 'the Crown' };
+    return st.cities.map(c => {
+      const items = c.stats.lost.map(h => {
+        if (h.what[0] === 'dynasty') return `Round ${h.r}: the dynasty fell, taking ${h.cards.map(name).join(', ')}${h.hinterlands ? ` and ${h.hinterlands} Hinterland${h.hinterlands > 1 ? 's' : ''}` : ''}.`;
+        const lost = [h.food ? `${h.food} Food` : '', h.trade ? `${h.trade} Trade` : ''].filter(Boolean).join(' and ');
+        return `Round ${h.r}: ${h.what.map(x => what[x] || x).join(' and ')} cost it ${lost}.`;
+      });
+      return `<h3 style="font-size:1rem;display:flex;gap:.4rem;align-items:center"><span class="initial" style="--cc:${color(c)}">${esc(initial(c))}</span>${esc(c.name)}</h3>
+        ${items.length ? `<ul>${items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '<p class="dim" style="margin:.1rem 0 .6rem">Nothing. A quiet game.</p>'}`;
+    }).join('');
+  }
+
+  function tableHtml() {
+    const R = st.cities[0].stats.popByRound.length;
+    const head = ['City', 'Start'].concat(Array.from({ length: R }, (_, k) => 'R' + (k + 1))).concat(['Food: own', 'Food: Routes', 'Food: state']);
+    return `<table><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${st.cities.map(c =>
+      `<tr><td>${esc(c.name)}</td><td>${st.cfg.startPop}</td>${c.stats.popByRound.map(v => `<td>${v}</td>`).join('')}<td>${c.stats.own}</td><td>${c.stats.routes}</td><td>${c.stats.state}</td></tr>`).join('')}</tbody></table>`;
+  }
+
+  // -------------------------------------------------------------- start --
+  renderSetup();
+}());
+</script>
+</body>
+</html>
